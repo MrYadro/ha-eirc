@@ -9,6 +9,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -62,7 +63,9 @@ class EircSpbFlowHandler(ConfigFlow, domain=DOMAIN):
             self._password = user_input[CONF_PASSWORD]
             await self.async_set_unique_id(self._login.lower())
             self._abort_if_unique_id_configured()
-            self._client = EircSpbApiClient(self._login, self._password)
+            self._client = EircSpbApiClient(
+                self._login, self._password, None, async_get_clientsession(self.hass)
+            )
             try:
                 self._auth_result = await self._client.authenticate()
             except EircSpbAuthError:
@@ -207,7 +210,12 @@ class EircSpbFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         entry = self._get_reauth_entry()
         if user_input is not None:
-            client = EircSpbApiClient(entry.data[CONF_LOGIN], user_input[CONF_PASSWORD])
+            client = EircSpbApiClient(
+                entry.data[CONF_LOGIN],
+                user_input[CONF_PASSWORD],
+                None,
+                async_get_clientsession(self.hass),
+            )
             try:
                 result = await client.authenticate()
             except EircSpbAuthError:
