@@ -36,13 +36,27 @@ The personal account is an Angular SPA backed by an undocumented REST API:
 - Base URL: `https://ikus.pesc.ru/api/` (from SPA `config.json` → `basePath`).
 - Backend is Java (`ru.sigma.ikus.*` in error traces). Errors come back as
   JSON: `{"code", "message", "cause", "data", "httpStatus"}`.
-- Auth: `POST v8/users/auth` with login + password. The login identifier is
-  either a phone (`+7XXXXXXXXXX`) or an email — the SPA matches both
-  (`email === login || phone === login`). The login request may carry a captcha
-  header; the SPA sends a `none` sentinel value by default (captcha appears to
-  be enforced only after failed attempts — to be validated). Session refresh:
-  `PUT v6/users/auth` with the token object; response merges refreshed fields
-  back.
+- Auth is two-stage. Stage 1: `POST v8/users/auth` with login + password and
+  headers `withTotp: true`, captcha (default `none` sentinel) and optionally
+  `Auth-Verification` (a persisted verification token — see below). The login
+  identifier is either a phone (`+7XXXXXXXXXX`) or an email — the SPA matches
+  both (`email === login || phone === login`). The response carries a `type`
+  (`authenticationType`); when it requires confirmation the session is not
+  usable yet.
+- Stage 2 (confirmation, only when required): the user picks a channel —
+  SMS, e-mail, or call — then
+  `POST v6/users/{sessionId}/{phone|email}/{availability}/confirmation/send`
+  delivers the code, and
+  `POST v7/users/{id}/{channel}/check/verification` `{"code": ...}` verifies
+  it. A TOTP path also exists (`POST v1/dfa/{id}/totp/verify`) — out of scope
+  for the integration; users who enabled TOTP keep using the app.
+- After verification the SPA stores the returned verified token and replays it
+  as the `Auth-Verification` header on subsequent logins — this is how the web
+  cabinet avoids asking for a code every time. The integration must do the
+  same (store the token; re-verification should only be needed when the server
+  rejects it — validate during fixture capture).
+- Session refresh: `PUT v6/users/auth` with the token object; response merges
+  refreshed fields back. Logout: `DELETE v6/users/auth`.
 - Relevant endpoints observed in the SPA bundle:
   - `v8/accounts`, `v8/accounts/light`, `v8/accounts/providers` — лицевые счета
   - `v6/users/current` — profile
@@ -80,7 +94,12 @@ custom_components/eirc_spb/
 
 **api.py** (standalone, unit-testable):
 
-- `async def login(login_id, password) -> Session`  # login_id: phone or email
+- `async def login(login_id, password, verification_token=None) -> AuthResult`
+  # AuthResult = session + `needs_confirmation: bool` + session id / channels
+- `async def send_confirmation_code(session_id, channel) -> None`
+  # channel: one of sms | email | call (offered per auth response)
+- `async def verify_confirmation_code(session_id, channel, code) -> Session`
+  # returns session incl. verification token for future logins
 - `async def refresh(session) -> Session`
 - `async def get_accounts() -> list[Account]`
 - `async def get_meters(account_id) -> list[Meter]` (connection objects + indications)
@@ -128,11 +147,21 @@ Energy dashboard work without extra config.
 
 ## 5. Config & options flows
 
-**Config flow** (`user` step): login (`+7XXXXXXXXXX` phone **or** email,
-validated as either) + password. On submit: login → `get_accounts()` → if
-exactly one account, select it automatically; otherwise show a multi-select
-checkbox step (account number + address as labels). Store: login, password,
-selected account ids. Title: "ЕИРЦ СПб" (+ address when single-account).
+**Config flow** — multi-step:
+
+1. `user`: login (`+7XXXXXXXXXX` phone **or** email) + password.
+2. `confirm` (conditional): if `login()` reports confirmation required, show a
+   single-select of channels offered by the API response (SMS to +7…123,
+   e-mail to a***@…, call — masked like the web cabinet). On choose: send
+   code, advance.
+3. `code`: 4–6 digit input. On verify: session complete; store the returned
+   verification token with the entry (it enables future silent re-logins).
+4. `select_accounts`: `get_accounts()` → if exactly one account, select it
+   automatically; otherwise a multi-select (account number + address).
+
+Store: login, password, verification token, selected account ids. Title:
+"ЕИРЦ СПб" (+ address when single-account). Wrong code → show error on the
+`code` step, allow resend (re-invoke step 2's send).
 
 **Reauth flow**: on hard auth failure (bad credentials), show the standard HA
 reauth form (password update), then reload the entry.
@@ -163,9 +192,11 @@ data:
 - Credentials stored in the config entry (HA-encrypted at rest via config entry
   storage; note in README not to share config backups).
 - Every request: on 401 → refresh token once (`PUT v6/users/auth`); on refresh
-  failure → full re-login with stored credentials (login id may be phone or
-  email); if that also fails with invalid-credentials → trigger reauth flow
-  and set `ConfigEntryAuthError`.
+  failure → full re-login with stored credentials, replaying the stored
+  `Auth-Verification` token so no OTP is needed; if the server rejects the
+  verification token (confirmation required again) or credentials fail →
+  trigger reauth flow (user repeats the confirm/code steps) and set
+  `ConfigEntryAuthError`. TOTP-configured accounts are unsupported (documented).
 - Network/API errors → `DataUpdateCoordinator` retry with backoff; sensors keep
   last state (coordinator default), integration logs at debug.
 - Rate limiting: min scan interval 1h; login attempts are not retried in a loop.
@@ -197,14 +228,19 @@ pin during implementation planning to the then-current stable HA).
 **Fixtures first**: before writing api.py logic, run a capture script
 (`scripts/capture_fixtures.py`, throwaway, kept out of the shipped component)
 where the user logs in with real credentials (phone or email — whichever the
-user prefers) and saves sanitized JSON of:
-login response, `v8/accounts`, connection objects, indications, upload history,
+user prefers) and saves sanitized JSON of: full auth sequence (stage-1 response
+with `authenticationType`, confirmation-send, code-verify incl. the returned
+verification token, and a repeat login WITH the token to confirm it skips
+OTP), `v8/accounts`, connection objects, indications, upload history,
 `v7/bills/payments` for their accounts. These become `tests/fixtures/*.json`.
 
 - `test_api.py`: `aiohttp_client` mock (aresponses or HA's `MockConfigEntry` +
   `aiohttp.test_utils`) replaying fixtures → typed models; auth lifecycle:
-  401 → refresh → retry, refresh-dead → re-login, bad creds → auth error.
-- `test_config_flow.py`: full flow incl. multi-account selection, reauth.
+  login→confirm→verify sequence, 401 → refresh → retry, refresh-dead →
+  re-login with stored verification token (no OTP), token rejected → auth
+  error, bad creds → auth error.
+- `test_config_flow.py`: full flow incl. confirmation method selection, wrong
+  code, multi-account selection, reauth.
 - `test_sensor.py`: entity creation per fixture data, device_class/state_class,
   attributes (scale_id etc.).
 - `test_services.py`: happy path, API rejection, unknown entity.
@@ -220,11 +256,15 @@ Things the fixtures capture must confirm (each has a fallback):
 
 1. Captcha header on fresh login — expect `none` sentinel works; fallback: fail
    with clear message telling user to log in via web once (unblocks captcha).
-2. Balance sign convention — fallback: expose raw value, document convention.
-3. Accruals source: whether per-service breakdown comes from `v7/bills/payments`
+2. Confirmation flow: exact channel list + masking the auth response offers
+   (sms/email/call), code length, and whether the verification token truly
+   skips OTP on re-login; fallback: OTP step on every re-login (reauth flow
+   handles it, but poll frequency must drop to avoid SMS fatigue).
+3. Balance sign convention — fallback: expose raw value, document convention.
+4. Accruals source: whether per-service breakdown comes from `v7/bills/payments`
    or a sibling endpoint found in fixtures; fallback: totals only, breakdown in
    attributes when available.
-4. Payment history depth the endpoint returns — use whatever is returned,
+5. Payment history depth the endpoint returns — use whatever is returned,
    no paging in v1.
 
 Out of scope for v1 (explicitly): PDF bill download, push notifications,
