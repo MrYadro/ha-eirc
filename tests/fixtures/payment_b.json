@@ -1,0 +1,31 @@
+{
+  "accountId": 910000001,
+  "status": "SUCCESS",
+  "details": [
+    {
+      "subserviceId": 5163,
+      "subservice": {
+        "id": "5163",
+        "name": "Услуга 21",
+        "utility": "UNKNOWN",
+        "type": "BASIC_WITH_VARIABLE_PRICE",
+        "description": null
+      },
+      "providerServiceId": 111,
+      "providerServiceName": "АО \"РСВО\"",
+      "fine": {
+        "balance": null,
+        "accrued": 0.0
+      },
+      "charge": {
+        "balance": null,
+        "accrued": 242.35
+      },
+      "checked": true
+    }
+  ],
+  "timestamp": "2026-02-28T10:07:34",
+  "id": "10900000002",
+  "file": null,
+  "receiptUrl": null
+}

@@ -1,0 +1,31 @@
+{
+  "accountId": 910000001,
+  "status": "SUCCESS",
+  "details": [
+    {
+      "subserviceId": 42814,
+      "subservice": {
+        "id": "42814",
+        "name": "Услуга 2",
+        "utility": "UNKNOWN",
+        "type": "BASIC_WITH_VARIABLE_PRICE",
+        "description": null
+      },
+      "providerServiceId": 128,
+      "providerServiceName": "ООО \"Тест 4\"",
+      "fine": {
+        "balance": null,
+        "accrued": 0.0
+      },
+      "charge": {
+        "balance": null,
+        "accrued": 726.65
+      },
+      "checked": true
+    }
+  ],
+  "timestamp": "2026-02-28T10:07:34",
+  "id": "10900000001",
+  "file": null,
+  "receiptUrl": null
+}

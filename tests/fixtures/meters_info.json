@@ -1,0 +1,161 @@
+[
+  {
+    "id": {
+      "provider": 1100,
+      "registration": "100000"
+    },
+    "name": "Услуга 5 (ПУ №100001)",
+    "numberOfDigitsLeft": 5,
+    "numberOfDigitsRight": 3,
+    "serial": "100001",
+    "status": "ACTIVE",
+    "indications": [
+      {
+        "previousReadingDate": "12.11.2025",
+        "meterScaleId": 0,
+        "indicationId": null,
+        "scaleName": "Услуга 5",
+        "previousReading": 202.156,
+        "registerReading": null,
+        "unit": "куб.м."
+      }
+    ],
+    "subservice": {
+      "id": "26924",
+      "name": "Услуга 5",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "subserviceId": 26924
+  },
+  {
+    "id": {
+      "provider": 1100,
+      "registration": "100002"
+    },
+    "name": "Услуга 30 (ПУ №100003)",
+    "numberOfDigitsLeft": 5,
+    "numberOfDigitsRight": 3,
+    "serial": "100003",
+    "status": "ACTIVE",
+    "indications": [
+      {
+        "previousReadingDate": "12.11.2025",
+        "meterScaleId": 0,
+        "indicationId": null,
+        "scaleName": "Услуга 30",
+        "previousReading": 293.483,
+        "registerReading": null,
+        "unit": "куб.м."
+      }
+    ],
+    "subservice": {
+      "id": "26925",
+      "name": "Услуга 30",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "subserviceId": 26925
+  },
+  {
+    "id": {
+      "provider": 1100,
+      "registration": "100004"
+    },
+    "name": "Услуга 30 (ПУ №100005)",
+    "numberOfDigitsLeft": 5,
+    "numberOfDigitsRight": 3,
+    "serial": "100005",
+    "status": "ACTIVE",
+    "indications": [
+      {
+        "previousReadingDate": "12.11.2025",
+        "meterScaleId": 0,
+        "indicationId": null,
+        "scaleName": "Услуга 30",
+        "previousReading": 27.649,
+        "registerReading": null,
+        "unit": "куб.м."
+      }
+    ],
+    "subservice": {
+      "id": "26925",
+      "name": "Услуга 30",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "subserviceId": 26925
+  },
+  {
+    "id": {
+      "provider": 1100,
+      "registration": "100006"
+    },
+    "name": "Услуга 5 (ПУ №100007)",
+    "numberOfDigitsLeft": 5,
+    "numberOfDigitsRight": 3,
+    "serial": "100007",
+    "status": "ACTIVE",
+    "indications": [
+      {
+        "previousReadingDate": "12.11.2025",
+        "meterScaleId": 0,
+        "indicationId": null,
+        "scaleName": "Услуга 5",
+        "previousReading": 42.786,
+        "registerReading": null,
+        "unit": "куб.м."
+      }
+    ],
+    "subservice": {
+      "id": "26924",
+      "name": "Услуга 5",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "subserviceId": 26924
+  },
+  {
+    "id": {
+      "provider": 1100,
+      "registration": "00000999ZU"
+    },
+    "name": "Услуга 33.Услуга 9 (ПУ №100008)",
+    "numberOfDigitsLeft": 6,
+    "numberOfDigitsRight": 0,
+    "serial": "100008",
+    "status": "ACTIVE",
+    "indications": [
+      {
+        "previousReadingDate": "09.03.2026",
+        "meterScaleId": 2,
+        "indicationId": null,
+        "scaleName": "Услуга 9",
+        "previousReading": 8673.47,
+        "registerReading": null,
+        "unit": "кВт*ч"
+      },
+      {
+        "previousReadingDate": "09.03.2026",
+        "meterScaleId": 3,
+        "indicationId": null,
+        "scaleName": "Услуга 12",
+        "previousReading": 3890.8,
+        "registerReading": null,
+        "unit": "кВт*ч"
+      }
+    ],
+    "subservice": {
+      "id": "54179",
+      "name": "Услуга 33",
+      "utility": "ELECTRICITY",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "subserviceId": 54179
+  }
+]

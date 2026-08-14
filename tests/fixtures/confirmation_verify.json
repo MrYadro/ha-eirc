@@ -1,0 +1,5 @@
+{
+  "access": "fake.jwt.token",
+  "auth": "fake.jwt.token",
+  "verified": "fake.jwt.token"
+}

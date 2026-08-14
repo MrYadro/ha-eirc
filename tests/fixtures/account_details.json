@@ -1,0 +1,1124 @@
+[
+  {
+    "header": "Информация о жилом помещении",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Номер лицевого счета",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Адрес",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Тип жилья",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Этаж",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Кол-во комнат",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Общая площадь",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Жилая площадь",
+        "code": null,
+        "description": "",
+        "value": null,
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Владелец",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Наименование УК",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Количество проживающих",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Количество отсутствующих",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Информация о приборе учёта № 100008",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Услуга",
+        "code": "SERVICE_NAME",
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Состояние ПУ",
+        "code": "meterState",
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Серийный номер",
+        "code": "METER_NUMBER",
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Разрядность",
+        "code": "CAPACITY",
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Отношение",
+        "code": "relationType",
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Модель",
+        "code": "METER_MODEL",
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Место установки",
+        "code": "METER_PLACE",
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "МПИ (лет)",
+        "code": "CHECK_INTERVAL",
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Кол-во тарифов",
+        "code": "TARIFF",
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Класс точности ПУ",
+        "code": "GRADE_ACCUR",
+        "description": "",
+        "value": "1,37",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата установки",
+        "code": "METER_DATE",
+        "description": "",
+        "value": "07.10.2020",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата истечения поверки",
+        "code": "METER_CHECK_DATE",
+        "description": "",
+        "value": "14.11.2036",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Балансовая принадлежность",
+        "code": "METER_OWNER",
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "U-ном. и макс.",
+        "code": "METER_VOLTAGE",
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "I ном. и макс.(А)",
+        "code": "METER_CURRENT",
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Информация о приборе учёта № 100003",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Название счётчика",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Тип счётчика",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Номер счётчика",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Название типа услуги",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Последние показания",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата последних показаний",
+        "code": null,
+        "description": "",
+        "value": "11.02.2025",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Количество знаков после запятой",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата установки",
+        "code": null,
+        "description": "",
+        "value": "14.01.2020",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата истечения поверки",
+        "code": null,
+        "description": "",
+        "value": "15.10.2025",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Информация о приборе учёта № 100005",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Название счётчика",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Тип счётчика",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Номер счётчика",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Название типа услуги",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Последние показания",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата последних показаний",
+        "code": null,
+        "description": "",
+        "value": "11.02.2025",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Количество знаков после запятой",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата установки",
+        "code": null,
+        "description": "",
+        "value": "14.01.2020",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата истечения поверки",
+        "code": null,
+        "description": "",
+        "value": "15.10.2025",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Информация о приборе учёта № 100007",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Название счётчика",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Тип счётчика",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Номер счётчика",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Название типа услуги",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Последние показания",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата последних показаний",
+        "code": null,
+        "description": "",
+        "value": "11.02.2025",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Количество знаков после запятой",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата установки",
+        "code": null,
+        "description": "",
+        "value": "14.01.2020",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата истечения поверки",
+        "code": null,
+        "description": "",
+        "value": "17.10.2025",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Информация о приборе учёта № 100001",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Название счётчика",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Тип счётчика",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Номер счётчика",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Название типа услуги",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Последние показания",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата последних показаний",
+        "code": null,
+        "description": "",
+        "value": "11.02.2025",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Количество знаков после запятой",
+        "code": null,
+        "description": "",
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата установки",
+        "code": null,
+        "description": "",
+        "value": "14.01.2020",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Дата истечения поверки",
+        "code": null,
+        "description": "",
+        "value": "17.10.2025",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 2",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "22,36",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 10",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "5,14",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 13",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "2,131,47",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 24",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "14,29",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 27",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "4,40",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 25",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "11,60",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 28",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "7,23",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 22",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "0,69",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 32",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "0,99",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 23",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "6,96",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 18",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "3,06",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 30",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "59,09",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 5",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "202,72",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 4",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "59,09",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 3",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "59,09",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 21",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "242,35",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 17",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "3,378,72",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Холодная вода СОИ",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "59,09",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Отведение сточных вод ХВ СОИ",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "59,09",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Горячая вода СОИ",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "202,72",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 33 ночь СОИ",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "4,53",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 33 день СОИ",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "8,33",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Отведение сточных вод ГВ СОИ",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "59,09",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 5 (подогрев)",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "0,00",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Горячая вода СОИ (подогрев)",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "0,00",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 29",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "59,09",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 15",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "59,09",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 10",
+    "blockType": "SOLID",
+    "content": [
+      {
+        "name": "Тарифная ставка",
+        "code": null,
+        "description": null,
+        "value": "5,41",
+        "columns": null,
+        "rank": null
+      }
+    ],
+    "subHeader": null,
+    "rank": null,
+    "columns": null
+  },
+  {
+    "header": "Услуга 33",
+    "blockType": "TABLE",
+    "content": [
+      {
+        "name": "Тип тарифа",
+        "code": null,
+        "description": null,
+        "value": "Тест",
+        "columns": null,
+        "rank": null
+      },
+      {
+        "name": "Круглосуточный",
+        "code": null,
+        "description": "",
+        "value": null,
+        "columns": [
+          {
+            "code": "1",
+            "value": "5.31"
+          },
+          {
+            "code": "2",
+            "value": "6.12"
+          },
+          {
+            "code": "3",
+            "value": "9.13"
+          }
+        ],
+        "rank": 1
+      },
+      {
+        "name": "Услуга 12",
+        "code": null,
+        "description": "23:00 — 07:00",
+        "value": null,
+        "columns": [
+          {
+            "code": "1",
+            "value": "3.31"
+          },
+          {
+            "code": "2",
+            "value": "3.82"
+          },
+          {
+            "code": "3",
+            "value": "5.69"
+          }
+        ],
+        "rank": 2
+      },
+      {
+        "name": "Услуга 9",
+        "code": null,
+        "description": "07:00 — 23:00",
+        "value": null,
+        "columns": [
+          {
+            "code": "1",
+            "value": "6.08"
+          },
+          {
+            "code": "2",
+            "value": "7.00"
+          },
+          {
+            "code": "3",
+            "value": "10.45"
+          }
+        ],
+        "rank": 1
+      }
+    ],
+    "subHeader": "Подробная информация о тарифах размещена в разделе <a target=\"_blank\" href=\"https://ikus.pesc.ru/help/faq\">Помощь</a>",
+    "rank": null,
+    "columns": [
+      {
+        "code": "1",
+        "name": "Тариф 1 диапазона потребления",
+        "rank": 1
+      },
+      {
+        "code": "2",
+        "name": "Тариф 2 диапазона потребления",
+        "rank": 2
+      },
+      {
+        "code": "3",
+        "name": "Тариф 3 диапазона потребления",
+        "rank": 3
+      }
+    ]
+  }
+]

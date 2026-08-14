@@ -1,0 +1,53 @@
+[
+  {
+    "id": 910000001,
+    "tenancy": {
+      "register": "1000000001",
+      "name": {
+        "shorted": "ЕЛС",
+        "fulled": ""
+      }
+    },
+    "role": {
+      "code": null,
+      "operations": {
+        "documentsHistory": false,
+        "indications": false,
+        "indicationsHistory": false,
+        "payment": false,
+        "paymentsHistory": false,
+        "roleManagement": false,
+        "billSubscriptionsManagement": false,
+        "iku": false,
+        "deliveryChanging": true,
+        "createAutoPayment": false,
+        "paymentsInquiries": true,
+        "paymentsCalculationFormulas": true,
+        "documentProcessing": false,
+        "documentProcessingAttachment": true,
+        "documentProcessingSigning": false
+      },
+      "roleId": null,
+      "roleName": null
+    },
+    "fullName": "",
+    "confirmed": true,
+    "externalSystems": null,
+    "autoPaymentOn": true,
+    "delivery": "PAPER",
+    "service": {
+      "providerId": 1100,
+      "id": 1000,
+      "payment": {
+        "type": "by_calculation_at_current",
+        "categories": [],
+        "editable": false
+      },
+      "providerCode": "EIRCPES"
+    },
+    "alias": "Тест",
+    "regionId": null,
+    "subsidiaryId": null,
+    "main": false
+  }
+]

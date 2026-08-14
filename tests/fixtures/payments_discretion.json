@@ -1,0 +1,866 @@
+[
+  {
+    "subserviceId": 26924,
+    "subservice": {
+      "id": "26924",
+      "name": "Услуга 5",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 955.74,
+        "type": 2
+      },
+      "accrued": 697.62
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26925,
+    "subservice": {
+      "id": "26925",
+      "name": "Услуга 30",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 392.26,
+        "type": 2
+      },
+      "accrued": 286.32
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26926,
+    "subservice": {
+      "id": "26926",
+      "name": "Услуга 24",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 629.16,
+        "type": 2
+      },
+      "accrued": 459.24
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26927,
+    "subservice": {
+      "id": "26927",
+      "name": "Услуга 23",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 390.29,
+        "type": 2
+      },
+      "accrued": 284.88
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 140868,
+    "subservice": {
+      "id": "140868",
+      "name": "Услуга 29",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26929,
+    "subservice": {
+      "id": "26929",
+      "name": "Услуга 28",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 318.5,
+        "type": 2
+      },
+      "accrued": 232.48
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26931,
+    "subservice": {
+      "id": "26931",
+      "name": "Услуга 25",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 510.93,
+        "type": 2
+      },
+      "accrued": 372.94
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26932,
+    "subservice": {
+      "id": "26932",
+      "name": "Услуга 19",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26933,
+    "subservice": {
+      "id": "26933",
+      "name": "Услуга 18",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 134.52,
+        "type": 2
+      },
+      "accrued": 98.19
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26943,
+    "subservice": {
+      "id": "26943",
+      "name": "Услуга 22",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 30.17,
+        "type": 2
+      },
+      "accrued": 22.02
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 32962,
+    "subservice": {
+      "id": "32962",
+      "name": "Услуга 5 (подогрев)",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 32961,
+    "subservice": {
+      "id": "32961",
+      "name": "Услуга 5 СОИ (подогрев)",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26930,
+    "subservice": {
+      "id": "26930",
+      "name": "Услуга 5 СОИ",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 66.09,
+        "type": 2
+      },
+      "accrued": 48.24
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26922,
+    "subservice": {
+      "id": "26922",
+      "name": "Услуга 30 СОИ",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 31.15,
+        "type": 2
+      },
+      "accrued": 22.74
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26934,
+    "subservice": {
+      "id": "26934",
+      "name": "Услуга 33 ночь СОИ",
+      "utility": "ELECTRICITY",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 7.56,
+        "type": 2
+      },
+      "accrued": 5.52
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26936,
+    "subservice": {
+      "id": "26936",
+      "name": "Услуга 33 день СОИ",
+      "utility": "ELECTRICITY",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 63.65,
+        "type": 2
+      },
+      "accrued": 46.46
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26937,
+    "subservice": {
+      "id": "26937",
+      "name": "Услуга 27",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 193.64,
+        "type": 2
+      },
+      "accrued": 141.34
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26938,
+    "subservice": {
+      "id": "26938",
+      "name": "Услуга 20",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26939,
+    "subservice": {
+      "id": "26939",
+      "name": "Услуга 17",
+      "utility": "HEATING",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26923,
+    "subservice": {
+      "id": "26923",
+      "name": "Услуга 14",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 19.26,
+        "type": 2
+      },
+      "accrued": 14.06
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26940,
+    "subservice": {
+      "id": "26940",
+      "name": "Услуга 3",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 278.58,
+        "type": 2
+      },
+      "accrued": 203.34
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26928,
+    "subservice": {
+      "id": "26928",
+      "name": "Услуга 16",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 31.15,
+        "type": 2
+      },
+      "accrued": 22.74
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26941,
+    "subservice": {
+      "id": "26941",
+      "name": "Услуга 4",
+      "utility": "WATER",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 392.26,
+        "type": 2
+      },
+      "accrued": 286.32
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 140870,
+    "subservice": {
+      "id": "140870",
+      "name": "Услуга 15",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 26942,
+    "subservice": {
+      "id": "26942",
+      "name": "Услуга 32",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231493,
+    "providerServiceName": "ООО \"Тест 5\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 43.43,
+        "type": 2
+      },
+      "accrued": 31.7
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 15979,
+    "subservice": {
+      "id": "15979",
+      "name": "Услуга 26",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231391,
+    "providerServiceName": "ООО \"Тест 7\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 628.76,
+        "type": 2
+      },
+      "accrued": 458.95
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 24172,
+    "subservice": {
+      "id": "24172",
+      "name": "Услуга 11",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231357,
+    "providerServiceName": "ООО \"Тест 6\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 178.31,
+        "type": 2
+      },
+      "accrued": 130.15
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 4595,
+    "subservice": {
+      "id": "4595",
+      "name": "Услуга 13",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231308,
+    "providerServiceName": "ООО \"Тест 1\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 608.97,
+        "type": 2
+      },
+      "accrued": 444.5
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 4596,
+    "subservice": {
+      "id": "4596",
+      "name": "Услуга 10",
+      "utility": "UNKNOWN",
+      "type": "ADDITIONAL_WITH_FIXED_PRICE",
+      "description": "<a class=\"link\" href=\"https://eirc.spb.ru/customers/services/strahovanie\" target=\"_blank\">Подробнее об услуге</a>"
+    },
+    "providerServiceId": 1231231304,
+    "providerServiceName": "Услуга 10",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 1
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 240.96,
+        "type": 1
+      },
+      "accrued": 175.88
+    },
+    "checked": false
+  },
+  {
+    "subserviceId": 4727,
+    "subservice": {
+      "id": "4727",
+      "name": "Услуга 21",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1231231297,
+    "providerServiceName": "ООО \"Тест 8\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 332.02,
+        "type": 2
+      },
+      "accrued": 242.35
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 4597,
+    "subservice": {
+      "id": "4597",
+      "name": "Услуга 1",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 4,
+    "providerServiceName": "ООО \"Тест 4\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 995.51,
+        "type": 2
+      },
+      "accrued": 726.65
+    },
+    "checked": true
+  },
+  {
+    "subserviceId": 54179,
+    "subservice": {
+      "id": "54179",
+      "name": "Услуга 33",
+      "utility": "ELECTRICITY",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 0,
+    "providerServiceName": "ООО \"Тест 2\"",
+    "fine": {
+      "balance": {
+        "value": 0.0,
+        "type": 2
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 3226.25,
+        "type": 2
+      },
+      "accrued": 2354.93
+    },
+    "checked": true
+  }
+]

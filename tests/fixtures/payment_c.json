@@ -1,0 +1,31 @@
+{
+  "accountId": 910000001,
+  "status": "SUCCESS",
+  "details": [
+    {
+      "subserviceId": 83116,
+      "subservice": {
+        "id": "83116",
+        "name": "Услуга 11",
+        "utility": "UNKNOWN",
+        "type": "BASIC_WITH_VARIABLE_PRICE",
+        "description": null
+      },
+      "providerServiceId": 321,
+      "providerServiceName": "ООО \"Тест 6\"",
+      "fine": {
+        "balance": null,
+        "accrued": 0.0
+      },
+      "charge": {
+        "balance": null,
+        "accrued": 130.15
+      },
+      "checked": true
+    }
+  ],
+  "timestamp": "2026-02-28T10:07:34",
+  "id": "10900000003",
+  "file": null,
+  "receiptUrl": null
+}

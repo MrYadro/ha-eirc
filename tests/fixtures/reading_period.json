@@ -1,0 +1,12 @@
+{
+  "acceptanceParameters": {
+    "name": "Август 2026",
+    "interval": {
+      "dateFrom": "17.03.2026",
+      "dateTo": "16.04.2026"
+    },
+    "deadLine": 11
+  },
+  "forbidden": false,
+  "message": null
+}
