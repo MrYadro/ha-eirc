@@ -11,13 +11,28 @@ from custom_components.eirc_spb.const import (
     DOMAIN,
 )
 from custom_components.eirc_spb.coordinator import EircSpbData
-from custom_components.eirc_spb.models import Account, Meter, Payment, Scale
+from custom_components.eirc_spb.models import (
+    Account,
+    BillsPayments,
+    Meter,
+    Payment,
+    Scale,
+)
 
 ENTRY_DATA = {
     CONF_LOGIN: "user1@example.com",
     CONF_PASSWORD: "pw",
     CONF_ACCOUNTS: ["a1"],
 }
+
+FINANCE = BillsPayments(
+    balance=150.25,
+    accruals_total=2000.0,
+    accruals_period=None,
+    accruals_breakdown={"Услуга 5": 500.0, "Услуга 7": 1500.0},
+    payments=[Payment("p1", "2026-02-28T10:07:34", 700.0)],
+)
+BILL = {"timestamp": "14.02.2026 00:00:00"}
 
 
 def build_data() -> EircSpbData:
@@ -176,6 +191,72 @@ async def test_device_registered_per_account(hass: HomeAssistant):
     device = dr.async_get(hass).async_get_device({(DOMAIN, "a1")})
     assert device is not None
     assert device.name == "ЕИРЦ 1000000001"
+
+
+def make_client() -> AsyncMock:
+    client = AsyncMock()
+    account = build_data().accounts["a1"]
+    account.balance = None
+    account.accruals_total = None
+    account.accruals_breakdown = {}
+    account.payments_total = 0.0
+    account.recent_payments = []
+    client.get_accounts.return_value = [account]
+    client.get_address.return_value = "ул. Тестовая, д. 1"
+    client.get_finance.return_value = FINANCE
+    client.get_current_bill.return_value = BILL
+    client.get_payments.return_value = [Payment("p1", "2026-02-28T10:07:34", 700.0)]
+    client.get_meters.return_value = list(build_data().meters.values())
+    return client
+
+
+async def test_coordinator_refresh_updates_states(hass: HomeAssistant):
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA)
+    entry.add_to_hass(hass)
+    client = make_client()
+    with patch(
+        "custom_components.eirc_spb.EircSpbApiClient",
+        return_value=client,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    balance = state_for(hass, "eirc_spb_1000000001_balance")
+    assert float(balance.state) == 150.25
+    meter_state = state_for(hass, "eirc_spb_1000000001_m1_0")
+    assert float(meter_state.state) == 123.45
+
+    refreshed_meter = Meter(
+        meter_id="m1",
+        account_id="a1",
+        name="Услуга 5 (ПУ №100000)",
+        device_class="water",
+        unit="куб.м.",
+        serial="100000",
+        scales=[
+            Scale(
+                scale_id="0",
+                name="Услуга 5",
+                last_reading=150.0,
+                last_submit="12.11.2025",
+            )
+        ],
+    )
+    client.get_finance.return_value = BillsPayments(
+        balance=999.0,
+        accruals_total=2000.0,
+        accruals_period=None,
+        accruals_breakdown={},
+        payments=[],
+    )
+    client.get_meters.return_value = [refreshed_meter]
+    coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    balance = state_for(hass, "eirc_spb_1000000001_balance")
+    assert float(balance.state) == 999.0
+    meter_state = state_for(hass, "eirc_spb_1000000001_m1_0")
+    assert float(meter_state.state) == 150.0
 
 
 def test_entity_precision_contract():

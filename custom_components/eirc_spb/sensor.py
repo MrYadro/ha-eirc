@@ -5,8 +5,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfVolume
-
-CURRENCY_RUB = "RUB"
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,6 +14,8 @@ from . import EircSpbRuntime
 from .const import ATTR_ACCOUNT_ID, ATTR_METER_ID, ATTR_SCALE_ID, DOMAIN
 from .coordinator import EircSpbCoordinator, EircSpbData
 from .models import Account, Meter, Scale
+
+CURRENCY_RUB = "RUB"
 
 
 async def async_setup_entry(
@@ -61,77 +61,69 @@ class _AccountSensor(CoordinatorEntity[EircSpbCoordinator], SensorEntity):
     _attr_suggested_display_precision = 2
 
     def __init__(
-        self, coordinator: EircSpbCoordinator, account: Account, key: str
+        self, coordinator: EircSpbCoordinator, account: Account
     ) -> None:
         super().__init__(coordinator)
-        self._account = account
-        self._attr_unique_id = f"{DOMAIN}_{account.number}_{key}"
+        self._account_id = account.account_id
+        self._attr_unique_id = f"{DOMAIN}_{account.number}_{self._key}"
         self._attr_device_info = _device(account)
+
+    @property
+    def account(self) -> Account | None:
+        return self.coordinator.data.accounts.get(self._account_id)
 
 
 class BalanceSensor(_AccountSensor):
+    _key = "balance"
     _attr_state_class = SensorStateClass.TOTAL
-
-    def __init__(
-        self, coordinator: EircSpbCoordinator, account: Account
-    ) -> None:
-        super().__init__(coordinator, account, "balance")
-
-    @property
-    def name(self) -> str:
-        return "Баланс"
+    _attr_name = "Баланс"
 
     @property
     def native_value(self) -> float | None:
-        return self._account.balance
+        account = self.account
+        return account.balance if account else None
 
 
 class AccrualsSensor(_AccountSensor):
+    _key = "accruals"
     _attr_state_class = SensorStateClass.TOTAL
-
-    def __init__(
-        self, coordinator: EircSpbCoordinator, account: Account
-    ) -> None:
-        super().__init__(coordinator, account, "accruals")
-
-    @property
-    def name(self) -> str:
-        return "Начисления"
+    _attr_name = "Начисления"
 
     @property
     def native_value(self) -> float | None:
-        return self._account.accruals_total
+        account = self.account
+        return account.accruals_total if account else None
 
     @property
     def extra_state_attributes(self) -> dict:
+        account = self.account
+        if account is None:
+            return {"period": None}
         return {
-            "period": self._account.accruals_period,
-            **self._account.accruals_breakdown,
+            "period": account.accruals_period,
+            **account.accruals_breakdown,
         }
 
 
 class PaymentsSensor(_AccountSensor):
+    _key = "payments"
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
-
-    def __init__(
-        self, coordinator: EircSpbCoordinator, account: Account
-    ) -> None:
-        super().__init__(coordinator, account, "payments")
-
-    @property
-    def name(self) -> str:
-        return "Платежи"
+    _attr_name = "Платежи"
 
     @property
     def native_value(self) -> float | None:
-        return self._account.payments_total
+        account = self.account
+        return account.payments_total if account else None
 
     @property
     def extra_state_attributes(self) -> dict:
+        account = self.account
+        if account is None:
+            return {"payments": []}
         return {
             "payments": [
                 {"id": p.payment_id, "date": p.date, "amount": p.amount}
-                for p in self._account.recent_payments
+                for p in account.recent_payments
             ]
         }
 
@@ -148,13 +140,15 @@ class MeterSensor(CoordinatorEntity[EircSpbCoordinator], SensorEntity):
         scale: Scale,
     ) -> None:
         super().__init__(coordinator)
-        self._account = account
-        self._meter = meter
-        self._scale = scale
+        self._account_id = account.account_id
+        self._meter_id = meter.meter_id
+        self._scale_id = scale.scale_id
         self._attr_unique_id = (
             f"{DOMAIN}_{account.number}_{meter.meter_id}_{scale.scale_id}"
         )
         self._attr_device_info = _device(account)
+        scale_suffix = f" {scale.name}" if scale.name else ""
+        self._attr_name = f"{meter.name}{scale_suffix}"
         if meter.device_class == "water":
             self._attr_device_class = SensorDeviceClass.WATER
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
@@ -167,21 +161,32 @@ class MeterSensor(CoordinatorEntity[EircSpbCoordinator], SensorEntity):
             self._attr_native_unit_of_measurement = meter.unit or None
 
     @property
-    def name(self) -> str:
-        scale_suffix = f" {self._scale.name}" if self._scale.name else ""
-        return f"{self._meter.name}{scale_suffix}"
+    def meter(self) -> Meter | None:
+        return self.coordinator.data.meters.get(self._meter_id)
+
+    @property
+    def scale(self) -> Scale | None:
+        meter = self.meter
+        if meter is None:
+            return None
+        return next(
+            (s for s in meter.scales if s.scale_id == self._scale_id), None
+        )
 
     @property
     def native_value(self) -> float | None:
-        return self._scale.last_reading
+        scale = self.scale
+        return scale.last_reading if scale else None
 
     @property
     def extra_state_attributes(self) -> dict:
+        meter = self.meter
+        scale = self.scale
         return {
-            ATTR_ACCOUNT_ID: self._account.account_id,
-            ATTR_METER_ID: self._meter.meter_id,
-            ATTR_SCALE_ID: self._scale.scale_id,
-            "last_submit": self._scale.last_submit,
-            "meter_serial": self._meter.serial,
-            "verification_date": self._meter.verification_date,
+            ATTR_ACCOUNT_ID: self._account_id,
+            ATTR_METER_ID: self._meter_id,
+            ATTR_SCALE_ID: self._scale_id,
+            "last_submit": scale.last_submit if scale else None,
+            "meter_serial": meter.serial if meter else None,
+            "verification_date": meter.verification_date if meter else None,
         }
