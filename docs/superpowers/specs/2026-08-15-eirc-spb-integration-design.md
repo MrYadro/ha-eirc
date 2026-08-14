@@ -36,11 +36,13 @@ The personal account is an Angular SPA backed by an undocumented REST API:
 - Base URL: `https://ikus.pesc.ru/api/` (from SPA `config.json` → `basePath`).
 - Backend is Java (`ru.sigma.ikus.*` in error traces). Errors come back as
   JSON: `{"code", "message", "cause", "data", "httpStatus"}`.
-- Auth: `POST v8/users/auth` with login (phone) + password; login request may
-  carry a captcha header, the SPA sends a `none` sentinel value by default
-  (captcha appears to be enforced only after failed attempts — to be validated).
-  Session refresh: `PUT v6/users/auth` with the token object; response merges
-  refreshed fields back.
+- Auth: `POST v8/users/auth` with login + password. The login identifier is
+  either a phone (`+7XXXXXXXXXX`) or an email — the SPA matches both
+  (`email === login || phone === login`). The login request may carry a captcha
+  header; the SPA sends a `none` sentinel value by default (captcha appears to
+  be enforced only after failed attempts — to be validated). Session refresh:
+  `PUT v6/users/auth` with the token object; response merges refreshed fields
+  back.
 - Relevant endpoints observed in the SPA bundle:
   - `v8/accounts`, `v8/accounts/light`, `v8/accounts/providers` — лицевые счета
   - `v6/users/current` — profile
@@ -78,7 +80,7 @@ custom_components/eirc_spb/
 
 **api.py** (standalone, unit-testable):
 
-- `async def login(phone, password) -> Session`
+- `async def login(login_id, password) -> Session`  # login_id: phone or email
 - `async def refresh(session) -> Session`
 - `async def get_accounts() -> list[Account]`
 - `async def get_meters(account_id) -> list[Meter]` (connection objects + indications)
@@ -126,11 +128,11 @@ Energy dashboard work without extra config.
 
 ## 5. Config & options flows
 
-**Config flow** (`user` step): phone (`+7XXXXXXXXXX`, validated) + password.
-On submit: login → `get_accounts()` → if exactly one account, select it
-automatically; otherwise show a multi-select checkbox step (account number +
-address as labels). Store: phone, password, selected account ids. Title:
-"ЕИРЦ СПб" (+ address when single-account).
+**Config flow** (`user` step): login (`+7XXXXXXXXXX` phone **or** email,
+validated as either) + password. On submit: login → `get_accounts()` → if
+exactly one account, select it automatically; otherwise show a multi-select
+checkbox step (account number + address as labels). Store: login, password,
+selected account ids. Title: "ЕИРЦ СПб" (+ address when single-account).
 
 **Reauth flow**: on hard auth failure (bad credentials), show the standard HA
 reauth form (password update), then reload the entry.
@@ -161,8 +163,9 @@ data:
 - Credentials stored in the config entry (HA-encrypted at rest via config entry
   storage; note in README not to share config backups).
 - Every request: on 401 → refresh token once (`PUT v6/users/auth`); on refresh
-  failure → full re-login with stored credentials; if that also fails with
-  invalid-credentials → trigger reauth flow and set `ConfigEntryAuthError`.
+  failure → full re-login with stored credentials (login id may be phone or
+  email); if that also fails with invalid-credentials → trigger reauth flow
+  and set `ConfigEntryAuthError`.
 - Network/API errors → `DataUpdateCoordinator` retry with backoff; sensors keep
   last state (coordinator default), integration logs at debug.
 - Rate limiting: min scan interval 1h; login attempts are not retried in a loop.
@@ -193,7 +196,8 @@ pin during implementation planning to the then-current stable HA).
 
 **Fixtures first**: before writing api.py logic, run a capture script
 (`scripts/capture_fixtures.py`, throwaway, kept out of the shipped component)
-where the user logs in with real credentials and saves sanitized JSON of:
+where the user logs in with real credentials (phone or email — whichever the
+user prefers) and saves sanitized JSON of:
 login response, `v8/accounts`, connection objects, indications, upload history,
 `v7/bills/payments` for their accounts. These become `tests/fixtures/*.json`.
 
