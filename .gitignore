@@ -1,3 +1,5 @@
 .worktrees/
 scripts/.env
 tests/fixtures/raw/
+__pycache__/
+.venv/
