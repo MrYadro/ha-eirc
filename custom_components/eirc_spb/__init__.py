@@ -15,7 +15,6 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import EircSpbCoordinator
-from .exceptions import EircSpbAuthError
 
 PLATFORMS: list[str] = ["sensor"]
 
@@ -41,10 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "scan_interval_hours", DEFAULT_SCAN_INTERVAL_HOURS
     )
     coordinator = EircSpbCoordinator(hass, client, entry.data[CONF_ACCOUNTS], scan_hours)
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except EircSpbAuthError as err:
-        raise ConfigEntryAuthFailed from err
+    await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = EircSpbRuntime(
         client, coordinator
     )

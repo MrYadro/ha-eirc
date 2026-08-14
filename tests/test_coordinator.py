@@ -4,7 +4,8 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.eirc_spb import (
@@ -131,6 +132,43 @@ async def test_coordinator_address_failure_is_non_fatal(hass: HomeAssistant):
     assert coordinator.data.accounts["a1"].balance == 100.0
 
 
+async def test_coordinator_auth_error_translated(hass: HomeAssistant):
+    client = make_client([make_account("a1", "1000000001")])
+    client.get_accounts.side_effect = EircSpbAuthError("expired")
+    coordinator = build_coordinator(hass, client, ["a1"])
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator.async_config_entry_first_refresh()
+
+
+async def test_coordinator_auth_error_mid_loop_translated(hass: HomeAssistant):
+    client = make_client([make_account("a1", "1000000001")])
+    client.get_finance.side_effect = EircSpbAuthError("expired")
+    coordinator = build_coordinator(hass, client, ["a1"])
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator.async_config_entry_first_refresh()
+
+
+async def test_coordinator_address_auth_error_propagates(hass: HomeAssistant):
+    client = make_client([make_account("a1", "1000000001")])
+    client.get_address.side_effect = EircSpbAuthError("expired")
+    coordinator = build_coordinator(hass, client, ["a1"])
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator.async_config_entry_first_refresh()
+
+
+async def test_coordinator_api_error_maps_to_update_failed(hass: HomeAssistant):
+    client = make_client([make_account("a1", "1000000001")])
+    client.get_finance.side_effect = EircSpbApiError("boom")
+    coordinator = build_coordinator(hass, client, ["a1"])
+    with pytest.raises(ConfigEntryNotReady):
+        await coordinator.async_config_entry_first_refresh()
+    assert coordinator.last_update_success is False
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success is False
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+
+
 def make_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
@@ -182,24 +220,16 @@ async def test_setup_and_unload_entry(hass: HomeAssistant):
 async def test_setup_entry_maps_auth_error(hass: HomeAssistant):
     entry = make_entry()
     entry.add_to_hass(hass)
+    entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
     client = make_client([make_account("a1", "1000000001")])
-    coordinator = MagicMock()
-    coordinator.async_config_entry_first_refresh = AsyncMock(
-        side_effect=EircSpbAuthError("expired")
-    )
-    with (
-        patch(
+    client.get_accounts.side_effect = EircSpbAuthError("expired")
+    token = config_entries.current_entry.set(entry)
+    try:
+        with patch(
             "custom_components.eirc_spb.EircSpbApiClient", return_value=client
-        ),
-        patch(
-            "custom_components.eirc_spb.EircSpbCoordinator",
-            return_value=coordinator,
-        ),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            new_callable=AsyncMock,
-        ),
-    ):
-        with pytest.raises(ConfigEntryAuthFailed):
-            await async_setup_entry(hass, entry)
+        ):
+            with pytest.raises(ConfigEntryAuthFailed):
+                await async_setup_entry(hass, entry)
+    finally:
+        config_entries.current_entry.reset(token)
     assert async_get_entry_data(hass, entry.entry_id) is None
