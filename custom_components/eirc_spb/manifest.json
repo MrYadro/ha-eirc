@@ -1,0 +1,12 @@
+{
+  "domain": "eirc_spb",
+  "name": "EIRC SPb",
+  "codeowners": ["yaroslav"],
+  "config_flow": true,
+  "documentation": "https://github.com/yaroslav/ha-eirc",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/yaroslav/ha-eirc/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}
