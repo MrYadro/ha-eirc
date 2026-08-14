@@ -94,7 +94,10 @@ class EircSpbApiClient:
             method,
             f"{BASE_URL}/{path}",
             json=body,
-            headers={"Authorization": f"Bearer {self._state.auth}"},
+            headers={
+                "Authorization": f"Bearer {self._state.auth}",
+                "User-Agent": USER_AGENT,
+            },
             timeout=timeout,
         ) as resp:
             try:

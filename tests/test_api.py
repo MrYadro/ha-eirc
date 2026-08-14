@@ -4,6 +4,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+import aiohttp
 from aiohttp import web
 from aresponses import ResponsesMockServer
 
@@ -278,6 +279,25 @@ async def test_submit_reading(aresponses, client):
         "registration": "100000",
         "indications": [{"meterScaleId": "2", "value": 123}],
     }
+
+
+async def test_data_request_sends_user_agent_with_injected_session(aresponses):
+    injected = aiohttp.ClientSession()
+    c = EircSpbApiClient("login", "password", session=injected)
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    seen = {}
+
+    async def accounts_handler(request):
+        seen["user_agent"] = request.headers.get("User-Agent")
+        return ok(load("accounts"))
+
+    aresponses.add(HOST, "/api/v8/accounts", "GET", accounts_handler)
+    accounts = await c.get_accounts()
+    assert accounts[0].number == "1000000001"
+    assert seen["user_agent"] == "home-assistant-eirc-spb/1.0.0"
+    await c.close()
+    assert not injected.closed
+    await injected.close()
 
 
 async def test_api_error_on_500(aresponses, client):
