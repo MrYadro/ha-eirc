@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "EIRC SPb",
+        "description": "Sign in to your EIRC personal account (ikus.pesc.ru)",
+        "data": {
+          "login": "Phone (+7…) or e-mail",
+          "password": "Password"
+        }
+      },
+      "confirm": {
+        "title": "Confirm sign-in",
+        "description": "Choose how to receive the verification code",
+        "data": {
+          "channel": "Delivery method"
+        }
+      },
+      "code": {
+        "title": "Verification code",
+        "description": "Enter the code from the message you received",
+        "data": {
+          "code": "Code from the message"
+        }
+      },
+      "select_accounts": {
+        "title": "Accounts",
+        "description": "Select the accounts to add",
+        "data": {
+          "accounts": "Accounts"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update password",
+        "description": "The password for {login} has changed. Enter the new password.",
+        "data": {
+          "password": "New password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid username or password",
+      "invalid_code": "Invalid verification code",
+      "confirmation_required": "Sign-in confirmation required — sign in once via the website and retry",
+      "totp_unsupported": "TOTP is not supported"
+    },
+    "abort": {
+      "reauth_successful": "Re-authentication was successful",
+      "totp_unsupported": "Only TOTP verification is available, which is not supported"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval_hours": "Update interval, hours (1–24)"
+        }
+      }
+    }
+  }
+}

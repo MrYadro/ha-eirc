@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ЕИРЦ СПб",
+        "description": "Войдите в личный кабинет ЕИРЦ (ikus.pesc.ru)",
+        "data": {
+          "login": "Телефон (+7…) или e-mail",
+          "password": "Пароль"
+        }
+      },
+      "confirm": {
+        "title": "Подтверждение входа",
+        "description": "Выберите способ получения кода",
+        "data": {
+          "channel": "Способ"
+        }
+      },
+      "code": {
+        "title": "Код подтверждения",
+        "description": "Введите код из отправленного сообщения",
+        "data": {
+          "code": "Код из сообщения"
+        }
+      },
+      "select_accounts": {
+        "title": "Лицевые счета",
+        "description": "Выберите счета для добавления",
+        "data": {
+          "accounts": "Счета"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Обновление пароля",
+        "description": "Пароль для {login} изменился. Введите новый пароль.",
+        "data": {
+          "password": "Новый пароль"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Не удалось подключиться",
+      "invalid_auth": "Неверный логин или пароль",
+      "invalid_code": "Неверный код подтверждения",
+      "confirmation_required": "Требуется подтверждение входа — войдите один раз через веб-сайт и повторите попытку",
+      "totp_unsupported": "TOTP не поддерживается"
+    },
+    "abort": {
+      "reauth_successful": "Авторизация обновлена",
+      "totp_unsupported": "Доступна только проверка TOTP, которая не поддерживается"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval_hours": "Интервал обновления, ч (1–24)"
+        }
+      }
+    }
+  }
+}
