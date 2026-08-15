@@ -15,6 +15,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import EircSpbCoordinator
+from .services import SERVICE_SEND_METER_READING, async_setup_services
 
 PLATFORMS: list[str] = ["sensor"]
 
@@ -45,6 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         client, coordinator
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    if not hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING):
+        await async_setup_services(hass)
     return True
 
 
@@ -52,4 +55,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     runtime: EircSpbRuntime | None = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     if runtime:
         await runtime.client.close()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not hass.data.get(DOMAIN):
+        hass.services.async_remove(DOMAIN, SERVICE_SEND_METER_READING)
+    return unloaded
