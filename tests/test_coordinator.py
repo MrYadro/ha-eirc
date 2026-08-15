@@ -32,7 +32,6 @@ ADDRESS = "ул. Тестовая, д. 1, кв. 1"
 FINANCE = BillsPayments(
     balance=100.0,
     accruals_total=1500.0,
-    accruals_period=None,
     accruals_breakdown={"Услуга 5": 500.0, "Услуга 7": 1000.0},
     provider_accruals={'ООО "Тест 5"': 1500.0},
 )
@@ -246,7 +245,6 @@ async def test_coordinator_populates_new_fields(hass: HomeAssistant):
     client.get_finance.return_value = BillsPayments(
         balance=100.0,
         accruals_total=1500.0,
-        accruals_period=None,
         accruals_breakdown={"Услуга 5": 500.0},
         fines=12.5,
         provider_accruals={"Услуга 5": 500.0},

@@ -42,8 +42,7 @@
       "cannot_connect": "Failed to connect",
       "invalid_auth": "Invalid username or password",
       "invalid_code": "Invalid verification code",
-      "confirmation_required": "Sign-in confirmation required — sign in once via the website and retry",
-      "totp_unsupported": "TOTP is not supported"
+      "confirmation_required": "Sign-in confirmation required — sign in once via the website and retry"
     },
     "abort": {
       "reauth_successful": "Re-authentication was successful"

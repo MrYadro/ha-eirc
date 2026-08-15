@@ -68,7 +68,6 @@ def test_parse_finance():
     assert bp.balance == 10458.16
     assert bp.accruals_total == 7633.68
     assert bp.fines == 0.0
-    assert bp.accruals_period is None
     assert bp.accruals_breakdown["Услуга 5"] == 697.62
     assert bp.accruals_breakdown["Услуга 33"] == 2354.93
     assert "Добровольное тест-страхование" not in bp.accruals_breakdown

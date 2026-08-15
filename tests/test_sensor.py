@@ -27,7 +27,6 @@ ENTRY_DATA = {
 FINANCE = BillsPayments(
     balance=150.25,
     accruals_total=2000.0,
-    accruals_period=None,
     accruals_breakdown={"Услуга 5": 500.0, "Услуга 7": 1500.0},
 )
 BILL = {"timestamp": "14.02.2026 00:00:00"}
@@ -242,7 +241,6 @@ async def test_coordinator_refresh_updates_states(hass: HomeAssistant):
     client.get_finance.return_value = BillsPayments(
         balance=999.0,
         accruals_total=2000.0,
-        accruals_period=None,
         accruals_breakdown={},
         )
     client.get_meters.return_value = [refreshed_meter]

@@ -19,7 +19,6 @@ class Session:
     access: str
     auth: str
     verification_token: str | None = None
-    raw: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -98,7 +97,6 @@ class Authenticator:
                     access=str(data.get("access", "")),
                     auth=str(data.get("auth", "")),
                     verification_token=verification_token,
-                    raw=data,
                 ),
                 needs_confirmation=False,
             )
@@ -127,5 +125,4 @@ class Authenticator:
             access=str(data.get("access", "")),
             auth=str(data.get("auth", "")),
             verification_token=data.get("verified"),
-            raw=data,
         )

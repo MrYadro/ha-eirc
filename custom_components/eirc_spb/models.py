@@ -49,7 +49,6 @@ class Account:
 class BillsPayments:
     balance: float | None
     accruals_total: float | None
-    accruals_period: str | None
     accruals_breakdown: dict[str, float]
     fines: float = 0.0
     provider_accruals: dict[str, float] = field(default_factory=dict)
@@ -110,7 +109,6 @@ def parse_finance(raw: list) -> BillsPayments:
     return BillsPayments(
         balance=round(sum(i["charge"]["balance"]["value"] for i in checked), 2),
         accruals_total=round(sum(i["charge"]["accrued"] for i in checked), 2),
-        accruals_period=None,
         accruals_breakdown={
             i["subservice"]["name"]: i["charge"]["accrued"] for i in checked
         },

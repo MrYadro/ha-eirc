@@ -16,9 +16,6 @@ from .models import (
     parse_meters,
 )
 
-MAX_PAYMENT_DETAILS = 20
-
-
 def _message(data: Any) -> str:
     if isinstance(data, dict) and data.get("message"):
         return str(data["message"])
