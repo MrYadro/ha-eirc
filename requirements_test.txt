@@ -1,2 +1,3 @@
 pytest-homeassistant-custom-component==0.13.355
 aresponses==3.0.0
+pytest==9.0.3
