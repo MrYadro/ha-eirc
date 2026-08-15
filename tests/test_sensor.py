@@ -502,3 +502,53 @@ def test_energy_tariff_decapitalized():
     )
     entity = MeterSensor(coordinator, account, meter, Scale(scale_id="2", name="День"))
     assert entity._attr_name == "Электроэнергия день (ПУ № 333333)"
+
+
+async def test_entity_ids_are_english(hass: HomeAssistant):
+    await setup_sensors(hass)
+    erreg = er.async_get(hass)
+
+    def eid(uid: str) -> str:
+        entity_id = erreg.async_get_entity_id("sensor", DOMAIN, uid)
+        assert entity_id is not None, uid
+        return entity_id
+
+    assert eid("eirc_spb_1000000001_accruals") == (
+        "sensor.test_els_1000000001_accruals"
+    )
+    assert eid("eirc_spb_1000000001_bill") == "sensor.test_els_1000000001_current_bill"
+    assert eid("eirc_spb_1000000001_fines") == "sensor.test_els_1000000001_fines"
+    assert eid("eirc_spb_1000000001_reading_deadline") == (
+        "sensor.test_els_1000000001_reading_deadline"
+    )
+    assert eid("eirc_spb_1000000001_m1_0") == "sensor.test_els_1000000001_water_100000"
+    assert eid("eirc_spb_1000000001_m2_2") == (
+        "sensor.test_els_1000000001_electricity_t1_200000"
+    )
+    assert eid("eirc_spb_1000000001_m3_5") == (
+        "sensor.test_els_1000000001_prochee_300000"
+    )
+
+
+async def test_provider_entity_id_english_prefix(hass: HomeAssistant):
+    data = build_data()
+    data.accounts["a1"].provider_accruals = {'ООО "Тест 5"': 1500.0}
+    await setup_sensors(hass, data)
+    erreg = er.async_get(hass)
+    entity_id = erreg.async_get_entity_id(
+        "sensor", DOMAIN, "eirc_spb_1000000001_provider_ooo_test_5"
+    )
+    assert entity_id == "sensor.test_els_1000000001_accruals_ooo_test_5"
+
+
+def test_meter_object_id_utility_mapping():
+    from custom_components.eirc_spb.sensor import _meter_object_id
+
+    hot = Meter("900001", "a1", "x", "water", "м3", "111111", None, "Горячее водоснабжение", [])
+    cold = Meter("900002", "a1", "x", "water", "м3", "222222", None, "Холодное водоснабжение", [])
+    day = Meter("z1", "a1", "x", "energy", "кВт", "333333", None, "Электроэнергия", [])
+    night = Meter("z1", "a1", "x", "energy", "кВт", "333333", None, "Электроэнергия", [])
+    assert _meter_object_id(hot, Scale("0")) == "hot_water_111111"
+    assert _meter_object_id(cold, Scale("0")) == "cold_water_222222"
+    assert _meter_object_id(day, Scale("2", "День")) == "electricity_day_333333"
+    assert _meter_object_id(night, Scale("3", "Ночь")) == "electricity_night_333333"

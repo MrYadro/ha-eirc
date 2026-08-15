@@ -65,6 +65,27 @@ def _service_display_name(name: str) -> str:
     return name
 
 
+_TARIFF_EN = {"День": "day", "Ночь": "night"}
+
+
+def _meter_object_id(meter: Meter, scale: Scale) -> str:
+    if meter.device_class == "water":
+        name = (meter.subservice_name or meter.name).lower()
+        if "горяч" in name:
+            base = "hot_water"
+        elif "холодн" in name:
+            base = "cold_water"
+        else:
+            base = "water"
+    elif meter.device_class == "energy":
+        base = "electricity"
+        if scale.name:
+            base = f"{base}_{_TARIFF_EN.get(scale.name) or slugify(scale.name)}"
+    else:
+        base = slugify(meter.subservice_name or meter.name) or meter.meter_id
+    return "_".join(p for p in (base, meter.serial) if p)
+
+
 def _decapitalize_word(word: str) -> str:
     if len(word) > 1 and word[0].isupper() and word[1:].islower():
         return word[0].lower() + word[1:]
@@ -103,6 +124,7 @@ def _build_entities(coordinator: EircSpbCoordinator) -> list[SensorEntity]:
 
 
 class _AccountSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], SensorEntity):
+    _object_id: str
     _attr_device_class = SensorDeviceClass.MONETARY
     _attr_native_unit_of_measurement = CURRENCY_RUB
     _attr_has_entity_name = False
@@ -117,12 +139,17 @@ class _AccountSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], Sen
         self._attr_device_info = _device(account)
 
     @property
+    def suggested_object_id(self) -> str:
+        return self._object_id
+
+    @property
     def account(self) -> Account | None:
         return self.coordinator.data.accounts.get(self._account_id)
 
 
 class AccrualsSensor(_AccountSensor):
     _key = "accruals"
+    _object_id = "accruals"
     _attr_state_class = SensorStateClass.TOTAL
     _attr_name = "Начисления"
 
@@ -144,6 +171,7 @@ class AccrualsSensor(_AccountSensor):
 
 class CurrentBillSensor(_AccountSensor):
     _key = "bill"
+    _object_id = "current_bill"
     _attr_state_class = SensorStateClass.TOTAL
     _attr_name = "Текущий счёт"
 
@@ -167,6 +195,7 @@ class CurrentBillSensor(_AccountSensor):
 
 class FinesSensor(_AccountSensor):
     _key = "fines"
+    _object_id = "fines"
     _attr_state_class = SensorStateClass.TOTAL
     _attr_name = "Пеня"
 
@@ -178,6 +207,7 @@ class FinesSensor(_AccountSensor):
 
 class ReadingDeadlineSensor(_AccountSensor):
     _key = "reading_deadline"
+    _object_id = "reading_deadline"
     _attr_name = "Дедлайн показаний"
     _attr_icon = "mdi:calendar-clock"
 
@@ -214,6 +244,7 @@ class MeterSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], Sensor
         self._account_id = account.account_id
         self._meter_id = meter.meter_id
         self._scale_id = scale.scale_id
+        self._object_id = _meter_object_id(meter, scale)
         self._attr_unique_id = (
             f"{DOMAIN}_{account.number}_{meter.meter_id}_{scale.scale_id}"
         )
@@ -235,6 +266,10 @@ class MeterSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], Sensor
             self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         else:
             self._attr_native_unit_of_measurement = meter.unit or None
+
+    @property
+    def suggested_object_id(self) -> str:
+        return self._object_id
 
     @property
     def meter(self) -> Meter | None:
@@ -289,6 +324,11 @@ class ProviderAccrualsSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinat
         )
         self._attr_name = f"Начисления {provider}"
         self._attr_device_info = _device(account)
+        self._object_id = f"accruals_{slugify(provider)}"
+
+    @property
+    def suggested_object_id(self) -> str:
+        return self._object_id
 
     @property
     def native_value(self) -> float | None:
