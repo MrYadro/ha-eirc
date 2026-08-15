@@ -446,3 +446,36 @@ async def test_entity_names_clean_and_ids_carry_els(hass: HomeAssistant):
     balance = hass.states.get(balance_id)
     assert balance.attributes["friendly_name"] == "Баланс"
     assert balance.entity_id.startswith("sensor.test_els_1000000001_")
+
+
+async def test_provider_sensors_created_and_added_dynamically(hass: HomeAssistant):
+    data = build_data()
+    data.accounts["a1"].provider_accruals = {'ООО "Тест 5"': 1500.0}
+    await setup_sensors(hass, data)
+    erreg = er.async_get(hass)
+
+    prov_id = erreg.async_get_entity_id(
+        "sensor", DOMAIN, 'eirc_spb_1000000001_provider_ooo_test_5'
+    )
+    assert prov_id is not None
+    state = hass.states.get(prov_id)
+    assert float(state.state) == 1500.0
+    assert state.attributes["friendly_name"] == 'Начисления ООО "Тест 5"'
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
+    data.accounts["a1"].provider_accruals = {
+        'ООО "Тест 5"': 1600.0,
+        'ПАО "Ростелеком"': 300.0,
+    }
+    coordinator.data = data
+    for call in coordinator.async_add_listener.call_args_list:
+        call[0][0]()
+    await hass.async_block_till_done()
+
+    new_id = erreg.async_get_entity_id(
+        "sensor", DOMAIN, 'eirc_spb_1000000001_provider_pao_rostelekom'
+    )
+    assert new_id is not None
+    assert float(hass.states.get(new_id).state) == 300.0
+    assert float(hass.states.get(prov_id).state) == 1600.0

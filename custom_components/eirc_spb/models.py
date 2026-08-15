@@ -51,6 +51,7 @@ class Account:
     reading_deadline_day: int | None = None
     reading_period_name: str | None = None
     reading_window: str | None = None
+    provider_accruals: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -61,6 +62,7 @@ class BillsPayments:
     accruals_breakdown: dict[str, float]
     payments: list[Payment]
     fines: float = 0.0
+    provider_accruals: dict[str, float] = field(default_factory=dict)
 
 
 def parse_accounts(raw: list) -> list[Account]:
@@ -129,7 +131,20 @@ def parse_finance(raw: list) -> BillsPayments:
             ),
             2,
         ),
+        provider_accruals={
+            provider: round(sum(i["charge"]["accrued"] for i in group), 2)
+            for provider, group in _group_by_provider(checked).items()
+        },
     )
+
+
+def _group_by_provider(entries: list) -> dict[str, list]:
+    groups: dict[str, list] = {}
+    for entry in entries:
+        provider = str(entry.get("providerServiceName") or "")
+        if provider:
+            groups.setdefault(provider, []).append(entry)
+    return groups
 
 
 def parse_payment(raw: dict) -> Payment:

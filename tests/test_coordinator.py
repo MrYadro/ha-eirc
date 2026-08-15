@@ -36,6 +36,7 @@ FINANCE = BillsPayments(
     accruals_period=None,
     accruals_breakdown={"Услуга 5": 500.0, "Услуга 7": 1000.0},
     payments=[],
+    provider_accruals={'ООО "Тест 5"': 1500.0},
 )
 BILL = {"id": "26071000000001", "amount": 7633.65, "timestamp": "14.02.2026 00:00:00"}
 READING_PERIOD = {
@@ -253,10 +254,11 @@ async def test_coordinator_populates_new_fields(hass: HomeAssistant):
         balance=100.0,
         accruals_total=1500.0,
         accruals_period=None,
-        accruals_breakdown={"Услуга 5": 500.0},
-        payments=[],
-        fines=12.5,
-    )
+            accruals_breakdown={"Услуга 5": 500.0},
+            payments=[],
+            fines=12.5,
+            provider_accruals={"Услуга 5": 500.0},
+        )
     client.get_meters.return_value = []
     coordinator = build_coordinator(hass, client, ["a1"])
     await coordinator.async_config_entry_first_refresh()
@@ -267,3 +269,4 @@ async def test_coordinator_populates_new_fields(hass: HomeAssistant):
     assert account.reading_deadline_day == 11
     assert account.reading_period_name == "Август 2026"
     assert account.reading_window == "17.03.2026 – 16.04.2026"
+    assert account.provider_accruals == {"Услуга 5": 500.0}

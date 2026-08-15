@@ -10,6 +10,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from . import EircSpbRuntime
 from .const import ATTR_ACCOUNT_ID, ATTR_METER_ID, ATTR_SCALE_ID, DOMAIN
@@ -36,7 +37,25 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     runtime: EircSpbRuntime = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(_build_entities(runtime.coordinator))
+    coordinator = runtime.coordinator
+    async_add_entities(_build_entities(coordinator))
+    known_providers: set[str] = set()
+
+    def _sync_providers() -> None:
+        if coordinator.data is None:
+            return
+        fresh: list[ProviderAccrualsSensor] = []
+        for account in coordinator.data.accounts.values():
+            for provider in account.provider_accruals:
+                if provider in known_providers:
+                    continue
+                known_providers.add(provider)
+                fresh.append(ProviderAccrualsSensor(coordinator, account, provider))
+        if fresh:
+            async_add_entities(fresh)
+
+    _sync_providers()
+    coordinator.async_add_listener(_sync_providers)
 
 
 def _device(account: Account) -> DeviceInfo:
@@ -270,3 +289,31 @@ class MeterSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], Sensor
             "meter_serial": meter.serial if meter else None,
             "verification_date": meter.verification_date if meter else None,
         }
+
+
+class ProviderAccrualsSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], SensorEntity):
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_native_unit_of_measurement = CURRENCY_RUB
+    _attr_state_class = SensorStateClass.TOTAL
+    _attr_has_entity_name = False
+    _attr_suggested_display_precision = 2
+
+    def __init__(
+        self,
+        coordinator: EircSpbCoordinator,
+        account: Account,
+        provider: str,
+    ) -> None:
+        super().__init__(coordinator)
+        self._account_id = account.account_id
+        self._provider = provider
+        self._attr_unique_id = (
+            f"{DOMAIN}_{account.number}_provider_{slugify(provider)}"
+        )
+        self._attr_name = f"Начисления {provider}"
+        self._attr_device_info = _device(account)
+
+    @property
+    def native_value(self) -> float | None:
+        account = self.coordinator.data.accounts.get(self._account_id)
+        return account.provider_accruals.get(self._provider) if account else None

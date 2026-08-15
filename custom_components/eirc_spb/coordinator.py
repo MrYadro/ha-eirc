@@ -53,6 +53,7 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
                 account.accruals_total = finance.accruals_total
                 account.accruals_breakdown = finance.accruals_breakdown
                 account.fines = finance.fines
+                account.provider_accruals = finance.provider_accruals
                 bill = await self._client.get_current_bill(account.account_id)
                 account.accruals_period = bill.get("timestamp")
                 account.current_bill_amount = bill.get("amount")

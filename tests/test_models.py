@@ -80,6 +80,15 @@ def test_parse_finance():
     assert "Добровольное тест-страхование" not in bp.accruals_breakdown
 
 
+def test_parse_finance_groups_providers():
+    bp = parse_finance(load("payments_discretion"))
+    assert len(bp.provider_accruals) == 7
+    assert bp.provider_accruals['ООО "Тест 5"'] == 3276.15
+    assert bp.provider_accruals['ООО "Тест 2"'] == 2354.93
+    assert 'ООО "Тест 9"' not in bp.provider_accruals
+    assert "Услуга 10" not in bp.provider_accruals
+
+
 def test_parse_finance_excludes_unchecked_fines():
     raw = load("payments_discretion")
     raw[0]["fine"]["balance"]["value"] = 55.55
