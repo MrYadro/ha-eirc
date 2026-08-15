@@ -312,3 +312,16 @@ async def test_api_error_on_500(aresponses, client):
         await client.get_accounts()
     assert "boom" in str(e.value)
     assert e.value.code == "500"
+
+
+async def test_get_reading_period(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST,
+        "/api/v6/accounts/910000001/reading/period",
+        "GET",
+        ok(load("reading_period")),
+    )
+    period = await client.get_reading_period("910000001")
+    assert period["acceptanceParameters"]["deadLine"] == 11
+    assert period["acceptanceParameters"]["name"] == "Август 2026"

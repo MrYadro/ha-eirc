@@ -52,8 +52,24 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
                 account.balance = finance.balance
                 account.accruals_total = finance.accruals_total
                 account.accruals_breakdown = finance.accruals_breakdown
+                account.fines = finance.fines
                 bill = await self._client.get_current_bill(account.account_id)
                 account.accruals_period = bill.get("timestamp")
+                account.current_bill_amount = bill.get("amount")
+                account.current_bill_id = (
+                    str(bill["id"]) if bill.get("id") is not None else None
+                )
+                period = await self._client.get_reading_period(account.account_id)
+                params = period.get("acceptanceParameters") or {}
+                interval = params.get("interval") or {}
+                account.reading_deadline_day = params.get("deadLine")
+                account.reading_period_name = params.get("name")
+                account.reading_window = (
+                    f"{interval.get('dateFrom', '')} – {interval.get('dateTo', '')}".strip(
+                        " –"
+                    )
+                    or None
+                )
                 payments = await self._client.get_payments(account.account_id)
                 account.payments_total = sum_payments(payments)
                 account.recent_payments = payments[:10]

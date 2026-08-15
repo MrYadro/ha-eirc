@@ -41,6 +41,12 @@ class Account:
     accruals_breakdown: dict[str, float] = field(default_factory=dict)
     payments_total: float = 0.0
     recent_payments: list[Payment] = field(default_factory=list)
+    current_bill_amount: float | None = None
+    current_bill_id: str | None = None
+    fines: float | None = None
+    reading_deadline_day: int | None = None
+    reading_period_name: str | None = None
+    reading_window: str | None = None
 
 
 @dataclass

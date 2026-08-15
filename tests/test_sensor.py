@@ -33,6 +33,15 @@ FINANCE = BillsPayments(
     payments=[Payment("p1", "2026-02-28T10:07:34", 700.0)],
 )
 BILL = {"timestamp": "14.02.2026 00:00:00"}
+READING_PERIOD = {
+    "acceptanceParameters": {
+        "name": "Август 2026",
+        "interval": {"dateFrom": "17.03.2026", "dateTo": "16.04.2026"},
+        "deadLine": 11,
+    },
+    "forbidden": False,
+    "message": None,
+}
 
 
 def build_data() -> EircSpbData:
@@ -92,11 +101,11 @@ def build_data() -> EircSpbData:
     return EircSpbData(accounts={"a1": account}, meters=meters)
 
 
-async def setup_sensors(hass: HomeAssistant) -> None:
+async def setup_sensors(hass: HomeAssistant, data: EircSpbData | None = None) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA)
     entry.add_to_hass(hass)
     coordinator = MagicMock()
-    coordinator.data = build_data()
+    coordinator.data = data or build_data()
     coordinator.async_config_entry_first_refresh = AsyncMock()
     with (
         patch(
@@ -207,6 +216,7 @@ def make_client() -> AsyncMock:
     client.get_current_bill.return_value = BILL
     client.get_payments.return_value = [Payment("p1", "2026-02-28T10:07:34", 700.0)]
     client.get_meters.return_value = list(build_data().meters.values())
+    client.get_reading_period.return_value = READING_PERIOD
     return client
 
 
@@ -286,3 +296,40 @@ def test_entity_precision_contract():
     assert unknown_entity.device_class is None
     assert unknown_entity.state_class is None
     assert unknown_entity.native_unit_of_measurement == "л"
+
+
+async def test_new_account_sensors(hass: HomeAssistant):
+    data = build_data()
+    account = data.accounts["a1"]
+    account.current_bill_amount = 7633.65
+    account.current_bill_id = "26071000000001"
+    account.fines = 12.5
+    account.reading_deadline_day = 11
+    account.reading_period_name = "Август 2026"
+    account.reading_window = "17.03.2026 – 16.04.2026"
+    await setup_sensors(hass, data)
+
+    erreg = er.async_get(hass)
+
+    bill = hass.states.get(
+        erreg.async_get_entity_id("sensor", DOMAIN, "eirc_spb_1000000001_bill")
+    )
+    assert bill is not None
+    assert float(bill.state) == 7633.65
+    assert bill.attributes["unit_of_measurement"] == "RUB"
+    assert bill.attributes["bill_id"] == "26071000000001"
+    assert bill.attributes["timestamp"] == "14.02.2026 00:00:00"
+
+    fines = hass.states.get(
+        erreg.async_get_entity_id("sensor", DOMAIN, "eirc_spb_1000000001_fines")
+    )
+    assert float(fines.state) == 12.5
+
+    deadline = hass.states.get(
+        erreg.async_get_entity_id(
+            "sensor", DOMAIN, "eirc_spb_1000000001_reading_deadline"
+        )
+    )
+    assert deadline.state == "11"
+    assert deadline.attributes["period"] == "Август 2026"
+    assert deadline.attributes["window"] == "17.03.2026 – 16.04.2026"

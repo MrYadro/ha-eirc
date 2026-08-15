@@ -160,6 +160,12 @@ class EircSpbApiClient:
         )
         return data if isinstance(data, dict) else {}
 
+    async def get_reading_period(self, account_id: str) -> dict:
+        data = await self._request(
+            "GET", f"v6/accounts/{account_id}/reading/period"
+        )
+        return data if isinstance(data, dict) else {}
+
     async def submit_reading(
         self, account_id: str, registration: str, readings: list[dict]
     ) -> dict:

@@ -44,6 +44,9 @@ def _build_entities(coordinator: EircSpbCoordinator) -> list[SensorEntity]:
                 BalanceSensor(coordinator, account),
                 AccrualsSensor(coordinator, account),
                 PaymentsSensor(coordinator, account),
+                CurrentBillSensor(coordinator, account),
+                FinesSensor(coordinator, account),
+                ReadingDeadlineSensor(coordinator, account),
             ]
         )
         for meter in data.meters.values():
@@ -126,6 +129,63 @@ class PaymentsSensor(_AccountSensor):
                 for p in account.recent_payments
             ]
         }
+
+
+class CurrentBillSensor(_AccountSensor):
+    _key = "bill"
+    _attr_state_class = SensorStateClass.TOTAL
+    _attr_name = "Текущий счёт"
+
+    @property
+    def native_value(self) -> float | None:
+        account = self.account
+        return account.current_bill_amount if account else None
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        account = self.account
+        if account is None:
+            return {}
+        attrs = {}
+        if account.current_bill_id is not None:
+            attrs["bill_id"] = account.current_bill_id
+        if account.accruals_period is not None:
+            attrs["timestamp"] = account.accruals_period
+        return attrs
+
+
+class FinesSensor(_AccountSensor):
+    _key = "fines"
+    _attr_state_class = SensorStateClass.TOTAL
+    _attr_name = "Пеня"
+
+    @property
+    def native_value(self) -> float | None:
+        account = self.account
+        return account.fines if account else None
+
+
+class ReadingDeadlineSensor(_AccountSensor):
+    _key = "reading_deadline"
+    _attr_name = "Дедлайн показаний"
+    _attr_icon = "mdi:calendar-clock"
+
+    @property
+    def native_value(self) -> int | None:
+        account = self.account
+        return account.reading_deadline_day if account else None
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        account = self.account
+        if account is None:
+            return {}
+        attrs = {}
+        if account.reading_period_name is not None:
+            attrs["period"] = account.reading_period_name
+        if account.reading_window is not None:
+            attrs["window"] = account.reading_window
+        return attrs
 
 
 class MeterSensor(CoordinatorEntity[EircSpbCoordinator], SensorEntity):

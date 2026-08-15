@@ -38,6 +38,15 @@ FINANCE = BillsPayments(
     payments=[],
 )
 BILL = {"id": "26071000000001", "amount": 7633.65, "timestamp": "14.02.2026 00:00:00"}
+READING_PERIOD = {
+    "acceptanceParameters": {
+        "name": "Август 2026",
+        "interval": {"dateFrom": "17.03.2026", "dateTo": "16.04.2026"},
+        "deadLine": 11,
+    },
+    "forbidden": False,
+    "message": None,
+}
 PAYMENTS = [Payment(payment_id="p1", date="2026-02-28T10:07:34", amount=700.0)]
 
 
@@ -71,6 +80,7 @@ def make_client(accounts: list[Account]) -> AsyncMock:
     client.get_current_bill.return_value = BILL
     client.get_payments.return_value = PAYMENTS
     client.get_meters.return_value = [make_meter()]
+    client.get_reading_period.return_value = READING_PERIOD
     return client
 
 
@@ -233,3 +243,27 @@ async def test_setup_entry_maps_auth_error(hass: HomeAssistant):
     finally:
         config_entries.current_entry.reset(token)
     assert async_get_entry_data(hass, entry.entry_id) is None
+
+
+async def test_coordinator_populates_new_fields(hass: HomeAssistant):
+    from custom_components.eirc_spb.models import BillsPayments
+
+    client = make_client([Account(account_id="a1", number="1000000001", address="")])
+    client.get_finance.return_value = BillsPayments(
+        balance=100.0,
+        accruals_total=1500.0,
+        accruals_period=None,
+        accruals_breakdown={"Услуга 5": 500.0},
+        payments=[],
+        fines=12.5,
+    )
+    client.get_meters.return_value = []
+    coordinator = build_coordinator(hass, client, ["a1"])
+    await coordinator.async_config_entry_first_refresh()
+    account = coordinator.data.accounts["a1"]
+    assert account.current_bill_amount == 7633.65
+    assert account.current_bill_id == "26071000000001"
+    assert account.fines == 12.5
+    assert account.reading_deadline_day == 11
+    assert account.reading_period_name == "Август 2026"
+    assert account.reading_window == "17.03.2026 – 16.04.2026"
