@@ -1,5 +1,7 @@
 # ЕИРЦ СПб (eirc_spb) для Home Assistant
 
+[![Открыть в Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MrYadro&repository=ha-eirc)
+
 ## Описание
 
 Интеграция личного кабинета ЕИРЦ СПб ([ikus.pesc.ru](https://ikus.pesc.ru)) для Home Assistant.
