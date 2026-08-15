@@ -306,6 +306,8 @@ async def test_new_account_sensors(hass: HomeAssistant):
         )
     )
     assert deadline.state == "11"
+    assert "unit_of_measurement" not in deadline.attributes
+    assert "device_class" not in deadline.attributes
     assert deadline.attributes["period"] == "Август 2026"
     assert deadline.attributes["window"] == "17.03.2026 – 16.04.2026"
 

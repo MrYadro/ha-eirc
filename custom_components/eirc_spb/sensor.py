@@ -210,6 +210,8 @@ class ReadingDeadlineSensor(_AccountSensor):
     _object_id = "reading_deadline"
     _attr_name = "Дедлайн показаний"
     _attr_icon = "mdi:calendar-clock"
+    _attr_device_class = None
+    _attr_native_unit_of_measurement = None
 
     @property
     def native_value(self) -> int | None:
