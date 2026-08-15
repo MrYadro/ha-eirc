@@ -6,6 +6,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -16,6 +17,17 @@ from .coordinator import EircSpbCoordinator, EircSpbData
 from .models import Account, Meter, Scale
 
 CURRENCY_RUB = "RUB"
+
+
+class _CleanNameMixin:
+    _attr_name: str
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        registry = er.async_get(self.hass)
+        entry = registry.async_get(self.entity_id)
+        if entry is not None and entry.name is None:
+            registry.async_update_entity(self.entity_id, name=self._attr_name)
 
 
 async def async_setup_entry(
@@ -60,10 +72,10 @@ def _build_entities(coordinator: EircSpbCoordinator) -> list[SensorEntity]:
     return entities
 
 
-class _AccountSensor(CoordinatorEntity[EircSpbCoordinator], SensorEntity):
+class _AccountSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], SensorEntity):
     _attr_device_class = SensorDeviceClass.MONETARY
     _attr_native_unit_of_measurement = CURRENCY_RUB
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
     _attr_suggested_display_precision = 2
 
     def __init__(
@@ -191,8 +203,8 @@ class ReadingDeadlineSensor(_AccountSensor):
         return attrs
 
 
-class MeterSensor(CoordinatorEntity[EircSpbCoordinator], SensorEntity):
-    _attr_has_entity_name = True
+class MeterSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], SensorEntity):
+    _attr_has_entity_name = False
     _attr_suggested_display_precision = 3
 
     def __init__(

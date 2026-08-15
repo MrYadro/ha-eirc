@@ -429,3 +429,20 @@ def test_water_meter_name_uses_subservice_not_scale():
         coordinator, account, meter, Scale(scale_id="0", name="Иная шкала")
     )
     assert entity._attr_name == "Горячее водоснабжение (ПУ № 111111)"
+
+
+async def test_entity_names_clean_and_ids_carry_els(hass: HomeAssistant):
+    await setup_sensors(hass)
+    erreg = er.async_get(hass)
+
+    water_id = erreg.async_get_entity_id("sensor", DOMAIN, "eirc_spb_1000000001_m1_0")
+    state = hass.states.get(water_id)
+    assert state.attributes["friendly_name"] == "Услуга 5 (ПУ № 100000)"
+    assert state.entity_id.startswith("sensor.test_els_1000000001_")
+
+    balance_id = erreg.async_get_entity_id(
+        "sensor", DOMAIN, "eirc_spb_1000000001_balance"
+    )
+    balance = hass.states.get(balance_id)
+    assert balance.attributes["friendly_name"] == "Баланс"
+    assert balance.entity_id.startswith("sensor.test_els_1000000001_")
