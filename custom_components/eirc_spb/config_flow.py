@@ -25,7 +25,11 @@ from .const import (
     CONF_VERIFICATION_TOKEN,
     DOMAIN,
 )
-from .exceptions import EircSpbApiError, EircSpbAuthError
+from .exceptions import (
+    EircSpbApiError,
+    EircSpbAuthError,
+    EircSpbConfirmationError,
+)
 from .models import Account
 
 CHANNEL_LABELS = {"EMAIL": "E-mail", "PHONE": "SMS", "FLASHCALL": "Звонок"}
@@ -134,8 +138,10 @@ class EircSpbFlowHandler(ConfigFlow, domain=DOMAIN):
                     self._channel.lower(),
                     user_input["code"],
                 )
-            except EircSpbApiError:
+            except EircSpbConfirmationError:
                 errors["base"] = "invalid_code"
+            except EircSpbApiError:
+                errors["base"] = "cannot_connect"
             else:
                 return await self._async_fetch_accounts("code", errors)
         return self.async_show_form(
@@ -213,7 +219,7 @@ class EircSpbFlowHandler(ConfigFlow, domain=DOMAIN):
             client = EircSpbApiClient(
                 entry.data[CONF_LOGIN],
                 user_input[CONF_PASSWORD],
-                None,
+                entry.data.get(CONF_VERIFICATION_TOKEN),
                 async_get_clientsession(self.hass),
             )
             try:
@@ -238,4 +244,5 @@ class EircSpbFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): PASSWORD_FIELD}),
             errors=errors,
+            description_placeholders={CONF_LOGIN: entry.data[CONF_LOGIN]},
         )

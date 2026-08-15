@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
@@ -7,7 +7,11 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.eirc_spb.auth import AuthResult, Session
 from custom_components.eirc_spb.const import DOMAIN
-from custom_components.eirc_spb.exceptions import EircSpbApiError, EircSpbAuthError
+from custom_components.eirc_spb.exceptions import (
+    EircSpbApiError,
+    EircSpbAuthError,
+    EircSpbConfirmationError,
+)
 from custom_components.eirc_spb.models import Account
 
 LOGIN = "user1@example.com"
@@ -125,7 +129,7 @@ async def test_wrong_code_shows_error(hass: HomeAssistant):
             channels=CHANNELS,
         )
     )
-    client.verify_code = AsyncMock(side_effect=EircSpbApiError("Неправильный код"))
+    client.verify_code = AsyncMock(side_effect=EircSpbConfirmationError("Неправильный код"))
     with patch(
         "custom_components.eirc_spb.config_flow.EircSpbApiClient",
         return_value=client,
@@ -139,6 +143,32 @@ async def test_wrong_code_shows_error(hass: HomeAssistant):
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "code"
         assert result["errors"] == {"base": "invalid_code"}
+
+
+async def test_code_api_error_shows_cannot_connect(hass: HomeAssistant):
+    client = client_mock()
+    client.authenticate = AsyncMock(
+        return_value=AuthResult(
+            session=None,
+            needs_confirmation=True,
+            transaction_id="t1",
+            channels=CHANNELS,
+        )
+    )
+    client.verify_code = AsyncMock(side_effect=EircSpbApiError("server error"))
+    with patch(
+        "custom_components.eirc_spb.config_flow.EircSpbApiClient",
+        return_value=client,
+    ):
+        result = await start_user_flow(hass)
+        result = await submit(hass, result["flow_id"], {"login": LOGIN, "password": "pw"})
+        result = await submit(hass, result["flow_id"], {"channel": "EMAIL"})
+        assert result["step_id"] == "code"
+
+        result = await submit(hass, result["flow_id"], {"code": "12345"})
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "code"
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_bad_credentials(hass: HomeAssistant):
@@ -174,7 +204,12 @@ async def test_single_account_autoselected(hass: HomeAssistant):
 async def test_reauth_successful(hass: HomeAssistant):
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"login": LOGIN, "password": "old", "accounts": ["a1"]},
+        data={
+            "login": LOGIN,
+            "password": "old",
+            "accounts": ["a1"],
+            "verification_token": "stored-vtok",
+        },
     )
     entry.add_to_hass(hass)
     client = client_mock()
@@ -182,7 +217,7 @@ async def test_reauth_successful(hass: HomeAssistant):
     with patch(
         "custom_components.eirc_spb.config_flow.EircSpbApiClient",
         return_value=client,
-    ), patch(
+    ) as client_cls, patch(
         "custom_components.eirc_spb.async_setup_entry",
         AsyncMock(return_value=True),
     ):
@@ -196,11 +231,13 @@ async def test_reauth_successful(hass: HomeAssistant):
         )
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
+        assert result["description_placeholders"]["login"] == LOGIN
 
         result = await submit(hass, result["flow_id"], {"password": "newpw"})
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
 
+        client_cls.assert_called_once_with(LOGIN, "newpw", "stored-vtok", ANY)
         assert entry.data["password"] == "newpw"
         assert entry.data["verification_token"] == "vtok"
         await hass.async_block_till_done()

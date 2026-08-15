@@ -73,7 +73,7 @@ fakes and must not be treated as expected real-world outputs.**
   of bill-id strings (latest first). `GET v8/payments/bills/{id}` → details
   (id, amount, timestamp, canDownload).
 - `GET v7/payments?account={id}&from&to` → list of payment-id strings
-  (mixed int-like and alphanumeric like "48PS9ZXAVGU8").
+  (mixed int-like and alphanumeric like "48FAKE0ZXAVGU8").
 - `GET v8/payments/{id}` → `{accountId, status: "SUCCESS", details:
   [{subserviceId, subservice: {name}, charge: {balance, accrued}}...],
   timestamp "2026-07-15T10:07:34", id, file, receiptUrl}`.
