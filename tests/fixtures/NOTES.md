@@ -51,9 +51,10 @@ fakes and must not be treated as expected real-world outputs.**
   distinct `meterScaleId`).
 - `v6/accounts/{id}/reading/period` → `{acceptanceParameters: {name:
   "Август 2026", interval: {dateFrom, dateTo}, deadLine: 11}, forbidden: false}`.
-- Reading submission endpoints from the SPA bundle (NOT exercised):
-  `POST v7/accounts/{id}/indications` (body = indications payload —
-  needs live validation when the service is first used).
+- Reading submission (VERIFIED live 2026-08-15, from web UI capture):
+  `POST v8/accounts/{id}/meters/{registration}/reading`
+  body `[{"scaleId": <int>, "value": <float>}]` → 200 literal `false`
+  (HTTP 200 = accepted; non-dict body normalized by the client).
 
 ## Balance / accruals
 

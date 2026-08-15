@@ -170,13 +170,9 @@ class EircSpbApiClient:
     ) -> dict:
         data = await self._request(
             "POST",
-            f"v7/accounts/{account_id}/indications",
-            {
-                "registration": registration,
-                "indications": [
-                    {"meterScaleId": r["scale_id"], "value": r["value"]}
-                    for r in readings
-                ],
-            },
+            f"v8/accounts/{account_id}/meters/{registration}/reading",
+            [{"scaleId": int(r["scale_id"]), "value": r["value"]} for r in readings],
         )
-        return data if isinstance(data, dict) else {}
+        if isinstance(data, dict):
+            return data
+        return {"code": "0", "message": "Показания приняты"}

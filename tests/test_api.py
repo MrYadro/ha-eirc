@@ -218,19 +218,33 @@ async def test_submit_reading(aresponses, client):
 
     async def submit_handler(request):
         seen["body"] = await request.json()
-        return ok({"code": "0", "message": "ok"})
+        return ok(False)
 
     aresponses.add(
-        HOST, "/api/v7/accounts/910000001/indications", "POST", submit_handler
+        HOST,
+        "/api/v8/accounts/910000001/meters/100000/reading",
+        "POST",
+        submit_handler,
     )
     result = await client.submit_reading(
         "910000001", "100000", [{"scale_id": "2", "value": 123}]
     )
     assert result["code"] == "0"
-    assert seen["body"] == {
-        "registration": "100000",
-        "indications": [{"meterScaleId": "2", "value": 123}],
-    }
+    assert seen["body"] == [{"scaleId": 2, "value": 123}]
+
+
+async def test_submit_reading_dict_response_passthrough(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST,
+        "/api/v8/accounts/910000001/meters/100000/reading",
+        "POST",
+        ok({"code": "42", "message": "accepted"}),
+    )
+    result = await client.submit_reading(
+        "910000001", "100000", [{"scale_id": 0, "value": 234.854}]
+    )
+    assert result == {"code": "42", "message": "accepted"}
 
 
 async def test_data_request_sends_user_agent_with_injected_session(aresponses):
