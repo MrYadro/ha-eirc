@@ -100,7 +100,7 @@ async def test_confirmation_flow_otp(hass: HomeAssistant):
         result = await submit(hass, result["flow_id"], {"login": LOGIN, "password": "pw"})
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "confirm"
-        assert channel_options(result) == {"EMAIL", "PHONE", "FLASHCALL"}
+        assert channel_options(result) == {"EMAIL", "PHONE", "FLASHCALL", "TOTP"}
 
         result = await submit(hass, result["flow_id"], {"channel": "EMAIL"})
         assert result["type"] == FlowResultType.FORM
@@ -291,3 +291,53 @@ async def test_options_flow_sets_scan_interval(hass: HomeAssistant):
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert entry.options == {"scan_interval_hours": 6.0}
+
+
+async def test_totp_flow_skips_send(hass: HomeAssistant):
+    client = client_mock()
+    client.authenticate = AsyncMock(
+        return_value=AuthResult(
+            session=None,
+            needs_confirmation=True,
+            transaction_id="t1",
+            channels=["EMAIL", "TOTP"],
+        )
+    )
+    client.send_code = AsyncMock()
+    client.verify_code = AsyncMock(
+        return_value=Session(access="a", auth="b", verification_token="vtok")
+    )
+    client.verification_token = "vtok"
+    with patch(
+        "custom_components.eirc_spb.config_flow.EircSpbApiClient",
+        return_value=client,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"login": LOGIN, "password": "pw"}
+        )
+        assert result["step_id"] == "confirm"
+
+        from custom_components.eirc_spb.config_flow import CHANNEL_LABELS
+
+        schema_channels = result["data_schema"].schema["channel"].container
+        assert "TOTP" in schema_channels
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"channel": "TOTP"}
+        )
+        assert result["step_id"] == "code"
+        client.send_code.assert_not_awaited()
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"code": "123456"}
+        )
+        client.verify_code.assert_awaited_once_with("t1", "totp", "123456")
+        assert result["step_id"] == "select_accounts"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"accounts": ["a1"]}
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["data"]["verification_token"] == "vtok"

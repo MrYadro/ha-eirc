@@ -345,3 +345,24 @@ async def test_session_label_failure_is_swallowed(aresponses, client):
     aresponses.add(HOST, "/api/v8/accounts", "GET", ok(load("accounts")))
     accounts = await client.get_accounts()
     assert accounts[0].number == "1000000001"
+
+
+async def test_verify_totp_uses_dfa_endpoint(aresponses):
+    import aiohttp as _aiohttp
+
+    from custom_components.eirc_spb.auth import Authenticator
+
+    session = _aiohttp.ClientSession()
+    try:
+        aresponses.add(
+            HOST,
+            "/api/v1/dfa/t1/totp/verify",
+            "POST",
+            ok({"access": "a", "auth": "b", "verified": "v"}),
+        )
+        auth = Authenticator(session)
+        result = await auth.verify_code("t1", "totp", "123456")
+        assert result.auth == "b"
+        assert result.verification_token == "v"
+    finally:
+        await session.close()

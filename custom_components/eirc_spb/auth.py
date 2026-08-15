@@ -114,11 +114,12 @@ class Authenticator:
             raise EircSpbAuthError(_message(data), _code(data))
 
     async def verify_code(self, transaction_id: str, channel: str, code: str) -> Session:
-        status, data = await self._request(
-            "POST",
-            f"v7/users/{transaction_id}/{channel}/check/verification",
-            {"code": code},
+        path = (
+            f"v1/dfa/{transaction_id}/totp/verify"
+            if channel == "totp"
+            else f"v7/users/{transaction_id}/{channel}/check/verification"
         )
+        status, data = await self._request("POST", path, {"code": code})
         if status >= 400:
             raise EircSpbConfirmationError(_message(data), _code(data))
         assert isinstance(data, dict)

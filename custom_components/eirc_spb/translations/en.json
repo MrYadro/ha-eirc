@@ -46,8 +46,7 @@
       "totp_unsupported": "TOTP is not supported"
     },
     "abort": {
-      "reauth_successful": "Re-authentication was successful",
-      "totp_unsupported": "Only TOTP verification is available, which is not supported"
+      "reauth_successful": "Re-authentication was successful"
     }
   },
   "options": {

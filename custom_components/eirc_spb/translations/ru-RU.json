@@ -46,8 +46,7 @@
       "totp_unsupported": "TOTP не поддерживается"
     },
     "abort": {
-      "reauth_successful": "Авторизация обновлена",
-      "totp_unsupported": "Доступна только проверка TOTP, которая не поддерживается"
+      "reauth_successful": "Авторизация обновлена"
     }
   },
   "options": {

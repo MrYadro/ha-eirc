@@ -32,7 +32,12 @@ from .exceptions import (
 )
 from .models import Account
 
-CHANNEL_LABELS = {"EMAIL": "E-mail", "PHONE": "SMS", "FLASHCALL": "Звонок"}
+CHANNEL_LABELS = {
+    "EMAIL": "E-mail",
+    "PHONE": "SMS",
+    "FLASHCALL": "Звонок",
+    "TOTP": "Приложение-аутентификатор",
+}
 
 PASSWORD_FIELD = TextSelector(
     TextSelectorConfig(type=TextSelectorType.PASSWORD)
@@ -99,12 +104,12 @@ class EircSpbFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         assert self._auth_result is not None
-        channels = [c for c in self._auth_result.channels if c != "TOTP"]
-        if not channels:
-            return self.async_abort(reason="totp_unsupported")
+        channels = list(self._auth_result.channels)
         if user_input is not None:
             assert self._client is not None
             self._channel = user_input["channel"]
+            if self._channel == "TOTP":
+                return await self.async_step_code()
             try:
                 await self._client.send_code(
                     self._auth_result.transaction_id or "", self._channel.lower()
