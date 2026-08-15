@@ -65,6 +65,7 @@ def build_data() -> EircSpbData:
             account_id="a1",
             name="Услуга 5 (ПУ №100000)",
             device_class="water",
+            subservice_name="Услуга 5",
             unit="куб.м.",
             serial="100000",
             verification_date=None,
@@ -96,6 +97,7 @@ def build_data() -> EircSpbData:
             account_id="a1",
             name="Прочее",
             device_class=None,
+            subservice_name="Прочее",
             unit="л",
             serial="300000",
             verification_date=None,
@@ -405,3 +407,25 @@ def test_energy_meter_name_uses_subservice_name():
         coordinator, account, meter, Scale(scale_id="2", name="День")
     )
     assert entity._attr_name == "Электроэнергия День (ПУ № 333333)"
+
+
+def test_water_meter_name_uses_subservice_not_scale():
+    from custom_components.eirc_spb.sensor import MeterSensor
+
+    coordinator = MagicMock()
+    coordinator.data = None
+    account = Account(account_id="a1", number="1000000001", address="")
+    meter = Meter(
+        meter_id="m7",
+        account_id="a1",
+        name="ИПУ ГВС (кухня)",
+        device_class="water",
+        unit="куб.м.",
+        serial="111111",
+        subservice_name="Горячее водоснабжение",
+        scales=[],
+    )
+    entity = MeterSensor(
+        coordinator, account, meter, Scale(scale_id="0", name="Иная шкала")
+    )
+    assert entity._attr_name == "Горячее водоснабжение (ПУ № 111111)"
