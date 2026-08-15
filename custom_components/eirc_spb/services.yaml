@@ -1,0 +1,24 @@
+send_meter_reading:
+  name: Отправить показания
+  description: >-
+    Передаёт показания счётчика в личный кабинет ЕИРЦ. Идентификаторы тарифов
+    (scale_id) берутся из атрибутов сенсора счётчика.
+  fields:
+    entity_id:
+      name: Сенсор счётчика
+      description: Сенсор показаний любого тарифа этого счётчика.
+      required: true
+      example: sensor.ivan_els_71000000001_hot_water_111111
+      selector:
+        entity:
+          domain: sensor
+          integration: eirc_spb
+    readings:
+      name: Показания
+      description: >-
+        Список показаний: scale_id (id тарифа из атрибутов сенсора) и value
+        (передаваемое показание).
+      required: true
+      example:
+        - scale_id: 0
+          value: 12345

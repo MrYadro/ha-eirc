@@ -27,3 +27,12 @@ def test_exceptions_exist():
 
     assert issubclass(EircSpbAuthError, EircSpbApiError)
     assert issubclass(EircSpbConfirmationError, EircSpbApiError)
+
+
+def test_services_yaml_exists():
+    import yaml
+
+    services = yaml.safe_load((COMPONENT / "services.yaml").read_text())
+    assert "send_meter_reading" in services
+    fields = services["send_meter_reading"]["fields"]
+    assert {"entity_id", "readings"} <= set(fields)
