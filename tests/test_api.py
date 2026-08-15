@@ -246,7 +246,7 @@ async def test_data_request_sends_user_agent_with_injected_session(aresponses):
     aresponses.add(HOST, "/api/v8/accounts", "GET", accounts_handler)
     accounts = await c.get_accounts()
     assert accounts[0].number == "1000000001"
-    assert seen["user_agent"] == "home-assistant-eirc-spb/1.0.0"
+    assert seen["user_agent"] == "home-assistant-eirc-spb/1.2.0"
     await c.close()
     assert not injected.closed
     await injected.close()
@@ -277,3 +277,57 @@ async def test_get_reading_period(aresponses, client):
     period = await client.get_reading_period("910000001")
     assert period["acceptanceParameters"]["deadLine"] == 11
     assert period["acceptanceParameters"]["name"] == "Август 2026"
+
+
+async def test_update_session_labels_session(aresponses, client):
+    aresponses.add(
+        HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"})
+    )
+    aresponses.add(
+        HOST, "/api/v6/users/current/session", "PATCH", web.Response(status=200)
+    )
+    await client.authenticate()
+    await client.update_session()
+    request = aresponses.history[-1].request
+    import json as _json
+
+    body = _json.loads(await request.text())
+    assert body["browser"] == "Home Assistant"
+    assert body["model"] == "Home Assistant"
+    assert body["os"]["name"] == "eirc_spb"
+    assert request.headers["Authorization"] == "Bearer t1"
+
+
+async def test_data_request_labels_session_after_login(aresponses, client):
+    aresponses.add(
+        HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"})
+    )
+    patched = []
+
+    async def patch_handler(request):
+        patched.append(request)
+        return web.Response(status=200)
+
+    aresponses.add(
+        HOST, "/api/v6/users/current/session", "PATCH", patch_handler, repeat=1
+    )
+    aresponses.add(HOST, "/api/v8/accounts", "GET", ok(load("accounts")))
+    accounts = await client.get_accounts()
+    assert accounts[0].number == "1000000001"
+    assert len(patched) == 1
+
+
+async def test_session_label_failure_is_swallowed(aresponses, client):
+    aresponses.add(
+        HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"})
+    )
+    aresponses.add(
+        HOST,
+        "/api/v6/users/current/session",
+        "PATCH",
+        ok({"code": "500", "message": "boom"}, status=500),
+        repeat=1,
+    )
+    aresponses.add(HOST, "/api/v8/accounts", "GET", ok(load("accounts")))
+    accounts = await client.get_accounts()
+    assert accounts[0].number == "1000000001"

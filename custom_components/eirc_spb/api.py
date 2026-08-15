@@ -5,7 +5,7 @@ from typing import Any
 import aiohttp
 
 from .auth import Authenticator, AuthResult, Session
-from .const import BASE_URL, REQUEST_TIMEOUT_SECONDS, USER_AGENT
+from .const import BASE_URL, DOMAIN, REQUEST_TIMEOUT_SECONDS, USER_AGENT, VERSION
 from .exceptions import EircSpbApiError, EircSpbAuthError
 from .models import (
     Account,
@@ -77,6 +77,19 @@ class EircSpbApiClient:
             self._verification_token = session.verification_token
         return session
 
+    async def update_session(self) -> None:
+        status, _ = await self._send(
+            "PATCH",
+            "v6/users/current/session",
+            {
+                "browser": "Home Assistant",
+                "os": {"name": DOMAIN, "version": VERSION},
+                "model": "Home Assistant",
+            },
+        )
+        if status >= 400:
+            raise EircSpbApiError(f"session update failed ({status})")
+
     async def _login(self) -> None:
         result = await self._auth.login(
             self._login_id, self._password, self._verification_token
@@ -84,6 +97,10 @@ class EircSpbApiClient:
         if result.session is None:
             raise EircSpbAuthError("confirmation required")
         self._state = result.session
+        try:
+            await self.update_session()
+        except EircSpbApiError:
+            pass
 
     async def _send(self, method: str, path: str, body: Any) -> tuple[int, Any]:
         assert self._state is not None
