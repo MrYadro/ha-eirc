@@ -25,7 +25,6 @@ from custom_components.eirc_spb.models import (
     Account,
     BillsPayments,
     Meter,
-    Payment,
     Scale,
 )
 
@@ -35,7 +34,6 @@ FINANCE = BillsPayments(
     accruals_total=1500.0,
     accruals_period=None,
     accruals_breakdown={"Услуга 5": 500.0, "Услуга 7": 1000.0},
-    payments=[],
     provider_accruals={'ООО "Тест 5"': 1500.0},
 )
 BILL = {"id": "26071000000001", "amount": 7633.65, "timestamp": "14.02.2026 00:00:00"}
@@ -48,7 +46,6 @@ READING_PERIOD = {
     "forbidden": False,
     "message": None,
 }
-PAYMENTS = [Payment(payment_id="p1", date="2026-02-28T10:07:34", amount=700.0)]
 
 
 def make_account(account_id: str, number: str) -> Account:
@@ -79,7 +76,6 @@ def make_client(accounts: list[Account]) -> AsyncMock:
     client.get_address.return_value = ADDRESS
     client.get_finance.return_value = FINANCE
     client.get_current_bill.return_value = BILL
-    client.get_payments.return_value = PAYMENTS
     client.get_meters.return_value = [make_meter()]
     client.get_reading_period.return_value = READING_PERIOD
     return client
@@ -108,16 +104,13 @@ async def test_coordinator_merges_data(hass: HomeAssistant):
     data: EircSpbData = coordinator.data
     assert data.accounts["a1"].balance == 100.0
     assert data.accounts["a1"].accruals_total == 1500.0
-    assert data.accounts["a1"].payments_total == 700.0
     assert data.accounts["a1"].accruals_breakdown == {"Услуга 5": 500.0, "Услуга 7": 1000.0}
     assert data.accounts["a1"].accruals_period == "14.02.2026 00:00:00"
     assert data.accounts["a1"].address == ADDRESS
-    assert data.accounts["a1"].recent_payments == PAYMENTS
     assert data.meters["m1"].scales[0].last_reading == 123.0
     client.get_address.assert_awaited_once_with("a1")
     client.get_finance.assert_awaited_once_with("a1")
     client.get_current_bill.assert_awaited_once_with("a1")
-    client.get_payments.assert_awaited_once_with("a1")
     client.get_meters.assert_awaited_once_with("a1")
 
 
@@ -254,10 +247,9 @@ async def test_coordinator_populates_new_fields(hass: HomeAssistant):
         balance=100.0,
         accruals_total=1500.0,
         accruals_period=None,
-            accruals_breakdown={"Услуга 5": 500.0},
-            payments=[],
-            fines=12.5,
-            provider_accruals={"Услуга 5": 500.0},
+        accruals_breakdown={"Услуга 5": 500.0},
+        fines=12.5,
+        provider_accruals={"Услуга 5": 500.0},
         )
     client.get_meters.return_value = []
     coordinator = build_coordinator(hass, client, ["a1"])

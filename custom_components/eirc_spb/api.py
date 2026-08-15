@@ -11,11 +11,9 @@ from .models import (
     Account,
     BillsPayments,
     Meter,
-    Payment,
     parse_accounts,
     parse_finance,
     parse_meters,
-    parse_payment,
 )
 
 MAX_PAYMENT_DETAILS = 20
@@ -137,22 +135,6 @@ class EircSpbApiClient:
             "GET", f"v7/accounts/{account_id}/payments/at/current/amount/discretion"
         )
         return parse_finance(data if isinstance(data, list) else [])
-
-    async def get_payments(self, account_id: str, from_days: int = 120) -> list[Payment]:
-        to_day = date.today()
-        from_day = to_day - timedelta(days=from_days)
-        data = await self._request(
-            "GET",
-            f"v7/payments?account={account_id}"
-            f"&from={from_day.isoformat()}&to={to_day.isoformat()}",
-        )
-        payment_ids = [str(i) for i in data if i] if isinstance(data, list) else []
-        payments = []
-        for payment_id in payment_ids[:MAX_PAYMENT_DETAILS]:
-            detail = await self._request("GET", f"v8/payments/{payment_id}")
-            if isinstance(detail, dict):
-                payments.append(parse_payment(detail))
-        return payments
 
     async def get_current_bill(self, account_id: str) -> dict:
         data = await self._request(

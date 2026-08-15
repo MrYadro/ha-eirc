@@ -208,56 +208,8 @@ async def test_get_finance(aresponses, client):
     )
     finance = await client.get_finance("910000001")
     assert finance.balance == pytest.approx(10458.16)
-    assert finance.payments == []
 
 
-async def test_get_payments_fetches_details(aresponses, client):
-    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
-    today = date.today()
-    aresponses.add(HOST, "/api/v7/payments", "GET", ok(["p1", "p2"]))
-    for pid in ("p1", "p2"):
-        aresponses.add(
-            HOST,
-            f"/api/v8/payments/{pid}",
-            "GET",
-            ok(
-                {
-                    "id": pid,
-                    "timestamp": "2026-02-28T10:07:34",
-                    "details": [{"charge": {"accrued": 100.0}}],
-                }
-            ),
-        )
-    payments = await client.get_payments("910000001")
-    assert len(payments) == 2
-    assert payments[0].payment_id == "p1"
-    assert payments[0].amount == 100.0
-
-
-async def test_get_payments_caps_detail_calls_at_20(aresponses, client):
-    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
-    aresponses.add(
-        HOST, "/api/v7/payments", "GET", ok([f"p{i}" for i in range(25)])
-    )
-    calls = []
-
-    async def detail_handler(request):
-        calls.append(request.path)
-        return ok(
-            {
-                "id": "x",
-                "timestamp": "2026-02-28T10:07:34",
-                "details": [{"charge": {"accrued": 1.0}}],
-            }
-        )
-
-    for _ in range(20):
-        aresponses.add(
-            HOST, re.compile(r"^/api/v8/payments/p\d+$"), "GET", detail_handler
-        )
-    payments = await client.get_payments("910000001")
-    assert len(payments) == 20
-    assert len(calls) == 20
 
 
 async def test_submit_reading(aresponses, client):

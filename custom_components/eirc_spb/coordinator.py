@@ -8,7 +8,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import EircSpbApiClient
 from .exceptions import EircSpbApiError, EircSpbAuthError
-from .models import Account, Meter, sum_payments
+from .models import Account, Meter
 
 
 @dataclass
@@ -71,9 +71,6 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
                     )
                     or None
                 )
-                payments = await self._client.get_payments(account.account_id)
-                account.payments_total = sum_payments(payments)
-                account.recent_payments = payments[:10]
                 data.accounts[account.account_id] = account
                 for meter in await self._client.get_meters(account.account_id):
                     data.meters[meter.meter_id] = meter

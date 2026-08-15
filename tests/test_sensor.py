@@ -15,7 +15,6 @@ from custom_components.eirc_spb.models import (
     Account,
     BillsPayments,
     Meter,
-    Payment,
     Scale,
 )
 
@@ -30,7 +29,6 @@ FINANCE = BillsPayments(
     accruals_total=2000.0,
     accruals_period=None,
     accruals_breakdown={"Услуга 5": 500.0, "Услуга 7": 1500.0},
-    payments=[Payment("p1", "2026-02-28T10:07:34", 700.0)],
 )
 BILL = {"timestamp": "14.02.2026 00:00:00"}
 READING_PERIOD = {
@@ -56,8 +54,6 @@ def build_data() -> EircSpbData:
         accruals_total=2000.0,
         accruals_period="14.02.2026 00:00:00",
         accruals_breakdown={"Услуга 5": 500.0, "Услуга 7": 1500.0},
-        payments_total=700.0,
-        recent_payments=[Payment("p1", "2026-02-28T10:07:34", 700.0)],
     )
     meters = {
         "m1": Meter(
@@ -153,15 +149,6 @@ async def test_accruals_sensor(hass: HomeAssistant):
     assert state.attributes["Услуга 7"] == 1500.0
 
 
-async def test_payments_sensor(hass: HomeAssistant):
-    await setup_sensors(hass)
-    state = state_for(hass, "eirc_spb_1000000001_payments")
-    assert float(state.state) == 700.0
-    assert state.attributes["state_class"] == "total_increasing"
-    assert state.attributes["payments"] == [
-        {"id": "p1", "date": "2026-02-28T10:07:34", "amount": 700.0}
-    ]
-
 
 async def test_water_meter_sensor(hass: HomeAssistant):
     await setup_sensors(hass)
@@ -214,13 +201,10 @@ def make_client() -> AsyncMock:
     account.balance = None
     account.accruals_total = None
     account.accruals_breakdown = {}
-    account.payments_total = 0.0
-    account.recent_payments = []
     client.get_accounts.return_value = [account]
     client.get_address.return_value = "ул. Тестовая, д. 1"
     client.get_finance.return_value = FINANCE
     client.get_current_bill.return_value = BILL
-    client.get_payments.return_value = [Payment("p1", "2026-02-28T10:07:34", 700.0)]
     client.get_meters.return_value = list(build_data().meters.values())
     client.get_reading_period.return_value = READING_PERIOD
     return client
@@ -260,8 +244,7 @@ async def test_coordinator_refresh_updates_states(hass: HomeAssistant):
         accruals_total=2000.0,
         accruals_period=None,
         accruals_breakdown={},
-        payments=[],
-    )
+        )
     client.get_meters.return_value = [refreshed_meter]
     coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
     await coordinator.async_refresh()
@@ -280,10 +263,6 @@ def test_entity_precision_contract():
     water = data.meters["m1"]
     assert (
         sensor.AccrualsSensor(coordinator, account)._attr_suggested_display_precision
-        == 2
-    )
-    assert (
-        sensor.PaymentsSensor(coordinator, account)._attr_suggested_display_precision
         == 2
     )
     unknown = data.meters["m3"]

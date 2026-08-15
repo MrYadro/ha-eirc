@@ -25,13 +25,6 @@ class Meter:
 
 
 @dataclass
-class Payment:
-    payment_id: str
-    date: str
-    amount: float
-
-
-@dataclass
 class Account:
     account_id: str
     number: str
@@ -43,8 +36,6 @@ class Account:
     accruals_total: float | None = None
     accruals_period: str | None = None
     accruals_breakdown: dict[str, float] = field(default_factory=dict)
-    payments_total: float = 0.0
-    recent_payments: list[Payment] = field(default_factory=list)
     current_bill_amount: float | None = None
     current_bill_id: str | None = None
     fines: float | None = None
@@ -60,7 +51,6 @@ class BillsPayments:
     accruals_total: float | None
     accruals_period: str | None
     accruals_breakdown: dict[str, float]
-    payments: list[Payment]
     fines: float = 0.0
     provider_accruals: dict[str, float] = field(default_factory=dict)
 
@@ -124,7 +114,6 @@ def parse_finance(raw: list) -> BillsPayments:
         accruals_breakdown={
             i["subservice"]["name"]: i["charge"]["accrued"] for i in checked
         },
-        payments=[],
         fines=round(
             sum(
                 (i["fine"]["balance"]["value"] or 0) for i in checked
@@ -145,15 +134,3 @@ def _group_by_provider(entries: list) -> dict[str, list]:
         if provider:
             groups.setdefault(provider, []).append(entry)
     return groups
-
-
-def parse_payment(raw: dict) -> Payment:
-    return Payment(
-        payment_id=str(raw["id"]),
-        date=raw["timestamp"],
-        amount=round(sum(d["charge"]["accrued"] for d in raw["details"]), 2),
-    )
-
-
-def sum_payments(payments: list[Payment]) -> float:
-    return round(sum(p.amount for p in payments), 2)

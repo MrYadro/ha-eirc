@@ -2,12 +2,9 @@ import json
 from pathlib import Path
 
 from custom_components.eirc_spb.models import (
-    Payment,
     parse_accounts,
     parse_finance,
     parse_meters,
-    parse_payment,
-    sum_payments,
 )
 
 FIX = Path(__file__).parent / "fixtures"
@@ -31,8 +28,6 @@ def test_parse_accounts():
     assert acct.accruals_total is None
     assert acct.accruals_period is None
     assert acct.accruals_breakdown == {}
-    assert acct.payments_total == 0.0
-    assert acct.recent_payments == []
 
 
 def test_parse_meters_and_scales():
@@ -74,7 +69,6 @@ def test_parse_finance():
     assert bp.accruals_total == 7633.68
     assert bp.fines == 0.0
     assert bp.accruals_period is None
-    assert bp.payments == []
     assert bp.accruals_breakdown["Услуга 5"] == 697.62
     assert bp.accruals_breakdown["Услуга 33"] == 2354.93
     assert "Добровольное тест-страхование" not in bp.accruals_breakdown
@@ -96,18 +90,4 @@ def test_parse_finance_excludes_unchecked_fines():
     assert bp.fines == 55.55
 
 
-def test_parse_payment():
-    payment = parse_payment(load("payment_a"))
-    assert payment.payment_id == "10900000001"
-    assert payment.date == "2026-02-28T10:07:34"
-    assert payment.amount == 726.65
 
-
-def test_sum_payments():
-    payments = [
-        Payment(payment_id="1", date="2026-01-01", amount=10.10),
-        Payment(payment_id="2", date="2026-01-02", amount=20.20),
-        Payment(payment_id="3", date="2026-01-03", amount=0.03),
-    ]
-    assert sum_payments(payments) == 30.33
-    assert sum_payments([]) == 0.0

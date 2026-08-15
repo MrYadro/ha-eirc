@@ -89,7 +89,6 @@ def _build_entities(coordinator: EircSpbCoordinator) -> list[SensorEntity]:
         entities.extend(
             [
                 AccrualsSensor(coordinator, account),
-                PaymentsSensor(coordinator, account),
                 CurrentBillSensor(coordinator, account),
                 FinesSensor(coordinator, account),
                 ReadingDeadlineSensor(coordinator, account),
@@ -140,29 +139,6 @@ class AccrualsSensor(_AccountSensor):
         return {
             "period": account.accruals_period,
             **account.accruals_breakdown,
-        }
-
-
-class PaymentsSensor(_AccountSensor):
-    _key = "payments"
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_name = "Платежи"
-
-    @property
-    def native_value(self) -> float | None:
-        account = self.account
-        return account.payments_total if account else None
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        account = self.account
-        if account is None:
-            return {"payments": []}
-        return {
-            "payments": [
-                {"id": p.payment_id, "date": p.date, "amount": p.amount}
-                for p in account.recent_payments
-            ]
         }
 
 
