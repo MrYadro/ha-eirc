@@ -20,6 +20,7 @@ class Meter:
     unit: str = ""
     serial: str | None = None
     verification_date: str | None = None
+    subservice_name: str | None = None
     scales: list[Scale] = field(default_factory=list)
 
 
@@ -105,6 +106,7 @@ def parse_meters(raw: list, account_id: str) -> list[Meter]:
                 unit=indications[0]["unit"] if indications else "",
                 serial=item.get("serial"),
                 verification_date=None,
+                subservice_name=subservice.get("name"),
                 scales=scales,
             )
         )

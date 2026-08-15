@@ -45,6 +45,7 @@ def test_parse_meters_and_scales():
     assert meter.device_class == "water"
     assert meter.unit == "куб.м."
     assert meter.serial == "100001"
+    assert meter.subservice_name == "Услуга 5"
     assert meter.verification_date is None
     assert len(meter.scales) == 1
     scale = meter.scales[0]

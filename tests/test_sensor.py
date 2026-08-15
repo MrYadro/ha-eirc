@@ -82,6 +82,7 @@ def build_data() -> EircSpbData:
             account_id="a1",
             name="Электроэнергия",
             device_class="energy",
+            subservice_name="Электроэнергия",
             unit="кВт.ч",
             serial="200000",
             verification_date=None,
@@ -384,7 +385,7 @@ async def test_meter_entity_names_use_scale_and_serial(hass: HomeAssistant):
     )
 
 
-def test_energy_meter_name_strips_builtin_pu_suffix():
+def test_energy_meter_name_uses_subservice_name():
     from custom_components.eirc_spb.sensor import MeterSensor
 
     coordinator = MagicMock()
@@ -397,9 +398,10 @@ def test_energy_meter_name_strips_builtin_pu_suffix():
         device_class="energy",
         unit="кВт*ч",
         serial="333333",
+        subservice_name="Электроэнергия",
         scales=[],
     )
     entity = MeterSensor(
         coordinator, account, meter, Scale(scale_id="2", name="День")
     )
-    assert entity._attr_name == "Электроэнергия.День День (ПУ № 333333)"
+    assert entity._attr_name == "Электроэнергия День (ПУ № 333333)"

@@ -210,18 +210,19 @@ class MeterSensor(CoordinatorEntity[EircSpbCoordinator], SensorEntity):
             f"{DOMAIN}_{account.number}_{meter.meter_id}_{scale.scale_id}"
         )
         self._attr_device_info = _device(account)
-        pu_suffix = f" (ПУ №{meter.serial})" if meter.serial else ""
-        base_name = meter.name
-        if pu_suffix and base_name.endswith(pu_suffix):
-            base_name = base_name[: -len(pu_suffix)]
         if meter.device_class == "energy" and scale.name:
-            self._attr_name = f"{base_name} {scale.name} (ПУ № {meter.serial})" if meter.serial else f"{base_name} {scale.name}"
+            prefix = meter.subservice_name or meter.name
+            self._attr_name = (
+                f"{prefix} {scale.name} (ПУ № {meter.serial})"
+                if meter.serial
+                else f"{prefix} {scale.name}"
+            )
         elif scale.name and meter.serial:
             self._attr_name = f"{scale.name} (ПУ № {meter.serial})"
         elif scale.name:
             self._attr_name = scale.name
         else:
-            self._attr_name = meter.name
+            self._attr_name = meter.subservice_name or meter.name
         if meter.device_class == "water":
             self._attr_device_class = SensorDeviceClass.WATER
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
