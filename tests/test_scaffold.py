@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 COMPONENT = Path(__file__).parent.parent / "custom_components" / "eirc_spb"
@@ -8,7 +9,7 @@ def test_manifest_valid():
     manifest = json.loads((COMPONENT / "manifest.json").read_text())
     assert manifest["domain"] == "eirc_spb"
     assert manifest["requirements"] == []
-    assert manifest["version"] == "1.0.0"
+    assert re.match(r"^\d+\.\d+\.\d+$", manifest["version"])
 
 
 def test_const_domain():
