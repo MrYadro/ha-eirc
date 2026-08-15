@@ -35,6 +35,9 @@ class Account:
     account_id: str
     number: str
     address: str
+    alias: str = ""
+    tenancy_full: str = ""
+    tenancy_short: str = ""
     balance: float | None = None
     accruals_total: float | None = None
     accruals_period: str | None = None
@@ -60,14 +63,21 @@ class BillsPayments:
 
 
 def parse_accounts(raw: list) -> list[Account]:
-    return [
-        Account(
-            account_id=str(item["id"]),
-            number=str(item["tenancy"]["register"]),
-            address="",
+    accounts = []
+    for item in raw:
+        tenancy = item.get("tenancy") or {}
+        name = tenancy.get("name") or {}
+        accounts.append(
+            Account(
+                account_id=str(item["id"]),
+                number=str(tenancy["register"]),
+                address="",
+                alias=str(item.get("alias") or ""),
+                tenancy_full=str(name.get("fulled") or ""),
+                tenancy_short=str(name.get("shorted") or ""),
+            )
         )
-        for item in raw
-    ]
+    return accounts
 
 
 def parse_meters(raw: list, account_id: str) -> list[Meter]:

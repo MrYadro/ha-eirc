@@ -24,6 +24,9 @@ def test_parse_accounts():
     assert acct.account_id == "910000001"
     assert acct.number == "1000000001"
     assert acct.address == ""
+    assert acct.alias == "Тест"
+    assert acct.tenancy_full == ""
+    assert acct.tenancy_short == "ЕЛС"
     assert acct.balance is None
     assert acct.accruals_total is None
     assert acct.accruals_period is None

@@ -49,6 +49,9 @@ def build_data() -> EircSpbData:
         account_id="a1",
         number="1000000001",
         address="ул. Тестовая, д. 1",
+        alias="Тест",
+        tenancy_full="",
+        tenancy_short="ЕЛС",
         balance=150.25,
         accruals_total=2000.0,
         accruals_period="14.02.2026 00:00:00",
@@ -199,7 +202,7 @@ async def test_device_registered_per_account(hass: HomeAssistant):
     await setup_sensors(hass)
     device = dr.async_get(hass).async_get_device({(DOMAIN, "a1")})
     assert device is not None
-    assert device.name == "ЕИРЦ 1000000001"
+    assert device.name == "Тест - ЕЛС 1000000001"
     assert device.model == "ул. Тестовая, д. 1"
 
 
@@ -334,3 +337,31 @@ async def test_new_account_sensors(hass: HomeAssistant):
     assert deadline.state == "11"
     assert deadline.attributes["period"] == "Август 2026"
     assert deadline.attributes["window"] == "17.03.2026 – 16.04.2026"
+
+
+def test_device_name_prefers_fulled_tenancy():
+    from custom_components.eirc_spb.sensor import _device
+
+    account = Account(
+        account_id="a1",
+        number="71000000002",
+        address="",
+        alias="Дом",
+        tenancy_full="Ленинградская область",
+        tenancy_short="ЕЛС",
+    )
+    assert _device(account)["name"] == "Дом - Ленинградская область 71000000002"
+
+
+def test_device_name_without_alias():
+    from custom_components.eirc_spb.sensor import _device
+
+    account = Account(
+        account_id="a2",
+        number="71000000003",
+        address="",
+        alias="",
+        tenancy_full="",
+        tenancy_short="ЕЛС",
+    )
+    assert _device(account)["name"] == "ЕЛС 71000000003"

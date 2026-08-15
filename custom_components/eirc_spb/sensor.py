@@ -28,9 +28,11 @@ async def async_setup_entry(
 
 
 def _device(account: Account) -> DeviceInfo:
+    tenancy = account.tenancy_full or account.tenancy_short
+    parts = [p for p in (account.alias, " ".join(filter(None, (tenancy, account.number)))) if p]
     return DeviceInfo(
         identifiers={(DOMAIN, account.account_id)},
-        name=f"ЕИРЦ {account.number}",
+        name=" - ".join(parts) or f"ЕИРЦ {account.number}",
         manufacturer="ЕИРЦ СПб",
         model=account.address or None,
     )
