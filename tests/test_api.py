@@ -207,7 +207,7 @@ async def test_get_finance(aresponses, client):
         ok(load("payments_discretion")),
     )
     finance = await client.get_finance("910000001")
-    assert finance.balance == pytest.approx(10699.12)
+    assert finance.balance == pytest.approx(10458.16)
     assert finance.payments == []
 
 

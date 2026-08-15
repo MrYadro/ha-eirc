@@ -862,5 +862,32 @@
       "accrued": 2354.93
     },
     "checked": true
+  },
+  {
+    "subserviceId": 99999,
+    "subservice": {
+      "id": "99999",
+      "name": "Добровольное тест-страхование",
+      "utility": "UNKNOWN",
+      "type": "BASIC_WITH_VARIABLE_PRICE",
+      "description": ""
+    },
+    "providerServiceId": 1,
+    "providerServiceName": "ООО \"Тест 9\"",
+    "fine": {
+      "balance": {
+        "value": 10.0,
+        "type": 1
+      },
+      "accrued": 0.0
+    },
+    "charge": {
+      "balance": {
+        "value": 128.38,
+        "type": 1
+      },
+      "accrued": 128.38
+    },
+    "checked": false
   }
 ]

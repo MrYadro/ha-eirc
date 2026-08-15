@@ -66,12 +66,21 @@ def test_parse_meters_electricity():
 
 def test_parse_finance():
     bp = parse_finance(load("payments_discretion"))
-    assert bp.balance == 10699.12
-    assert bp.accruals_total == 7809.56
+    assert bp.balance == 10458.16
+    assert bp.accruals_total == 7633.68
+    assert bp.fines == 0.0
     assert bp.accruals_period is None
     assert bp.payments == []
     assert bp.accruals_breakdown["Услуга 5"] == 697.62
     assert bp.accruals_breakdown["Услуга 33"] == 2354.93
+    assert "Добровольное тест-страхование" not in bp.accruals_breakdown
+
+
+def test_parse_finance_excludes_unchecked_fines():
+    raw = load("payments_discretion")
+    raw[0]["fine"]["balance"]["value"] = 55.55
+    bp = parse_finance(raw)
+    assert bp.fines == 55.55
 
 
 def test_parse_payment():

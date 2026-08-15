@@ -50,6 +50,7 @@ class BillsPayments:
     accruals_period: str | None
     accruals_breakdown: dict[str, float]
     payments: list[Payment]
+    fines: float = 0.0
 
 
 def parse_accounts(raw: list) -> list[Account]:
@@ -95,14 +96,21 @@ def parse_meters(raw: list, account_id: str) -> list[Meter]:
 
 
 def parse_finance(raw: list) -> BillsPayments:
+    checked = [i for i in raw if i.get("checked")]
     return BillsPayments(
-        balance=round(sum(i["charge"]["balance"]["value"] for i in raw), 2),
-        accruals_total=round(sum(i["charge"]["accrued"] for i in raw), 2),
+        balance=round(sum(i["charge"]["balance"]["value"] for i in checked), 2),
+        accruals_total=round(sum(i["charge"]["accrued"] for i in checked), 2),
         accruals_period=None,
         accruals_breakdown={
-            i["subservice"]["name"]: i["charge"]["accrued"] for i in raw
+            i["subservice"]["name"]: i["charge"]["accrued"] for i in checked
         },
         payments=[],
+        fines=round(
+            sum(
+                (i["fine"]["balance"]["value"] or 0) for i in checked
+            ),
+            2,
+        ),
     )
 
 
