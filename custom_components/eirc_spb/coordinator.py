@@ -7,8 +7,10 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import EircSpbApiClient
+from .const import DOMAIN
 from .exceptions import EircSpbApiError, EircSpbAuthError
 from .models import Account, Meter
+from .notifications import NotificationDetector
 
 
 @dataclass
@@ -33,6 +35,12 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
         )
         self._client = client
         self._account_ids = account_ids
+        self._detector: NotificationDetector | None = None
+        self._persistent = False
+
+    def setup_notifications(self, persistent: bool, deadline_days: int = 3) -> None:
+        self._persistent = persistent
+        self._detector = NotificationDetector(deadline_days=deadline_days)
 
     async def _async_update_data(self) -> EircSpbData:
         data = EircSpbData()
@@ -78,4 +86,49 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
             raise ConfigEntryAuthFailed from err
         except EircSpbApiError as err:
             raise UpdateFailed from err
+        if self._detector is not None:
+            for account in data.accounts.values():
+                for n in self._detector.feed(account):
+                    self._emit(n)
+            try:
+                native = await self._client.get_unread_notifications()
+            except EircSpbApiError:
+                native = []
+            for n in self._detector.native(native):
+                self._emit(n)
         return data
+
+    def _emit(self, n: dict) -> None:
+        event_type = {
+            "new_bill": f"{DOMAIN}_new_bill",
+            "reading_deadline": f"{DOMAIN}_reading_deadline",
+            "native": f"{DOMAIN}_notification",
+        }[n["type"]]
+        self.hass.bus.async_fire(event_type, n)
+        if not self._persistent:
+            return
+        from homeassistant.components import persistent_notification as pn
+
+        if n["type"] == "native":
+            notification_id = f"{DOMAIN}_{n['native_id']}"
+            title = n["title"]
+            message = n["message"]
+        elif n["type"] == "new_bill":
+            notification_id = f"{DOMAIN}_bill_{n['account_id']}_{n['bill_id']}"
+            title = "Новый счёт"
+            message = f"Лицевой счёт {n['number']}: новый счёт {n['bill_id']} на {n['amount']} ₽"
+        else:
+            notification_id = (
+                f"{DOMAIN}_deadline_{n['account_id']}_{n['deadline_day']}"
+            )
+            title = "Дедлайн показаний"
+            message = (
+                f"Лицевой счёт {n['number']}: осталось {n['days_left']} дн. "
+                f"для передачи показаний ({n['period']})"
+            )
+        pn.async_create(
+            self.hass,
+            title=title,
+            message=message,
+            notification_id=notification_id,
+        )

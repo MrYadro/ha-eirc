@@ -8,9 +8,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import EircSpbApiClient
 from .const import (
     CONF_ACCOUNTS,
+    CONF_DEADLINE_DAYS,
+    CONF_PERSISTENT_NOTIFICATIONS,
     CONF_LOGIN,
     CONF_PASSWORD,
     CONF_VERIFICATION_TOKEN,
+    DEFAULT_DEADLINE_DAYS,
     DEFAULT_SCAN_INTERVAL_HOURS,
     DOMAIN,
 )
@@ -41,7 +44,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "scan_interval_hours", DEFAULT_SCAN_INTERVAL_HOURS
     )
     coordinator = EircSpbCoordinator(hass, client, entry.data[CONF_ACCOUNTS], scan_hours)
+    coordinator.setup_notifications(
+        persistent=entry.options.get(CONF_PERSISTENT_NOTIFICATIONS, True),
+        deadline_days=entry.options.get(CONF_DEADLINE_DAYS, DEFAULT_DEADLINE_DAYS),
+    )
     await coordinator.async_config_entry_first_refresh()
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = EircSpbRuntime(
         client, coordinator
     )
@@ -49,6 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING):
         await async_setup_services(hass)
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

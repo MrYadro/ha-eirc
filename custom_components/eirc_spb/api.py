@@ -176,3 +176,9 @@ class EircSpbApiClient:
         if isinstance(data, dict):
             return data
         return {"code": "0", "message": "Показания приняты"}
+
+    async def get_unread_notifications(self) -> list[dict]:
+        data = await self._request(
+            "GET", "v6/notifications?state=unread&limit=20"
+        )
+        return data if isinstance(data, list) else []

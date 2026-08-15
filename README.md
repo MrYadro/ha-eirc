@@ -85,6 +85,41 @@ readings:
 
 После успешной отправки данные интеграции автоматически обновляются.
 
+## Уведомления
+
+Интеграция генерирует события и (по умолчанию) уведомления в интерфейсе Home Assistant (отключается в опциях):
+
+| Событие | Когда | Данные |
+|---|---|---|
+| `eirc_spb_notification` | Новое уведомление из личного кабинета (колокольчик ЕИРЦ: новый счёт, оплата, важная информация) | `title`, `message`, `timestamp`, `native_type` |
+| `eirc_spb_new_bill` | Появился новый счёт | `bill_id`, `amount`, `timestamp`, `number` |
+| `eirc_spb_reading_deadline` | Приближается дедлайн показаний (за N дней, N — в опциях) | `days_left`, `period`, `deadline_day`, `number` |
+
+Пример автоматизации (Telegram):
+
+```yaml
+alias: ЕИРЦ — уведомления
+triggers:
+  - trigger: event
+    event_type: eirc_spb_notification
+  - trigger: event
+    event_type: eirc_spb_new_bill
+  - trigger: event
+    event_type: eirc_spb_reading_deadline
+actions:
+  - action: notify.telegram
+    data:
+      title: ЕИРЦ СПб
+      message: >
+        {{ trigger.event.data.title | default('Новый счёт ' ~ trigger.event.data.bill_id,
+        true) }}
+        {{ trigger.event.data.message | default('на сумму ' ~ trigger.event.data.amount ~ ' ₽', true) }}
+```
+
+Для мобильного приложения замените `notify.telegram` на ваш `notify.mobile_app_*`.
+
+За сколько дней предупреждать о дедлайне и включены ли уведомления в интерфейсе — настраивается в опциях интеграции (изменения применяются сразу, без перезапуска).
+
 ## Отладка
 
 Включите отладочный лог в `configuration.yaml`:

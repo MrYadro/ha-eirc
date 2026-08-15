@@ -262,3 +262,42 @@ async def test_coordinator_populates_new_fields(hass: HomeAssistant):
     assert account.reading_period_name == "Август 2026"
     assert account.reading_window == "17.03.2026 – 16.04.2026"
     assert account.provider_accruals == {"Услуга 5": 500.0}
+
+
+async def test_notifications_fire_events_and_persistent(hass: HomeAssistant):
+    client = make_client([make_account("a1", "71000000001")])
+    client.get_current_bill.return_value = {
+        "id": "26071000000001",
+        "amount": 7633.65,
+        "timestamp": "14.02.2026 00:00:00",
+    }
+    client.get_unread_notifications.return_value = [
+        {
+            "id": "57295301",
+            "type": "BELL",
+            "title": "Новый счет доступен для оплаты",
+            "message": "<p>Счет за июль 2026 г.</p>",
+            "timestamp": "11.08.2026 15:35",
+        }
+    ]
+    events = []
+    hass.bus.async_listen("eirc_spb_notification", events.append)
+
+    coordinator = build_coordinator(hass, client, ["a1"])
+    coordinator.setup_notifications(persistent=True)
+    await coordinator.async_config_entry_first_refresh()
+    await hass.async_block_till_done()
+
+    assert any(
+        e.data.get("native_id") == "57295301"
+        and e.data.get("title") == "Новый счет доступен для оплаты"
+        for e in events
+    )
+
+    from homeassistant.components.persistent_notification import (
+        _async_get_or_create_notifications,
+    )
+
+    store = _async_get_or_create_notifications(hass)
+    assert "eirc_spb_57295301" in store
+    assert store["eirc_spb_57295301"]["title"] == "Новый счет доступен для оплаты"

@@ -366,3 +366,31 @@ async def test_verify_totp_uses_dfa_endpoint(aresponses):
         assert result.verification_token == "v"
     finally:
         await session.close()
+
+
+async def test_get_unread_notifications(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST, "/api/v6/users/current/session", "PATCH", web.Response(status=200)
+    )
+    import re as _re
+
+    aresponses.add(
+        HOST,
+        _re.compile(r"^/api/v6/notifications"),
+        "GET",
+        ok(
+            [
+                {
+                    "id": "57295301",
+                    "type": "BELL",
+                    "title": "Новый счет доступен для оплаты",
+                    "message": "<p>Счет за июль 2026 г.</p>",
+                    "timestamp": "11.08.2026 15:35",
+                }
+            ]
+        ),
+    )
+    items = await client.get_unread_notifications()
+    assert len(items) == 1
+    assert items[0]["id"] == "57295301"

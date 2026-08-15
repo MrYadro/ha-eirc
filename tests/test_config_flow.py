@@ -290,7 +290,9 @@ async def test_options_flow_sets_scan_interval(hass: HomeAssistant):
         result["flow_id"], {"scan_interval_hours": 6}
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert entry.options == {"scan_interval_hours": 6.0}
+    assert entry.options["scan_interval_hours"] == 6.0
+    assert entry.options["deadline_days"] == 3
+    assert entry.options["persistent_notifications"] is True
 
 
 async def test_totp_flow_skips_send(hass: HomeAssistant):
