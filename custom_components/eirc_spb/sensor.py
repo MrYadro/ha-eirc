@@ -210,8 +210,10 @@ class MeterSensor(CoordinatorEntity[EircSpbCoordinator], SensorEntity):
             f"{DOMAIN}_{account.number}_{meter.meter_id}_{scale.scale_id}"
         )
         self._attr_device_info = _device(account)
-        if scale.name:
-            self._attr_name = " ".join(filter(None, (scale.name, meter.serial)))
+        if scale.name and meter.serial:
+            self._attr_name = f"{scale.name} (ПУ № {meter.serial})"
+        elif scale.name:
+            self._attr_name = scale.name
         else:
             self._attr_name = meter.name
         if meter.device_class == "water":
