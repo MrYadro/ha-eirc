@@ -260,7 +260,7 @@ async def test_data_request_sends_user_agent_with_injected_session(aresponses):
     aresponses.add(HOST, "/api/v8/accounts", "GET", accounts_handler)
     accounts = await c.get_accounts()
     assert accounts[0].number == "1000000001"
-    assert seen["user_agent"] == "home-assistant-eirc-spb/1.4.0"
+    assert seen["user_agent"] == "home-assistant-eirc-spb/1.5.0"
     await c.close()
     assert not injected.closed
     await injected.close()
