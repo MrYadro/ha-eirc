@@ -135,13 +135,12 @@ def state_for(hass: HomeAssistant, unique_id: str) -> State:
     return state
 
 
-async def test_balance_sensor(hass: HomeAssistant):
+async def test_balance_sensor_removed(hass: HomeAssistant):
     await setup_sensors(hass)
-    state = state_for(hass, "eirc_spb_1000000001_balance")
-    assert float(state.state) == 150.25
-    assert state.attributes["unit_of_measurement"] == "RUB"
-    assert state.attributes["device_class"] == "monetary"
-    assert state.attributes["state_class"] == "total"
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, "eirc_spb_1000000001_balance"
+    )
+    assert entity_id is None
 
 
 async def test_accruals_sensor(hass: HomeAssistant):
@@ -237,8 +236,6 @@ async def test_coordinator_refresh_updates_states(hass: HomeAssistant):
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    balance = state_for(hass, "eirc_spb_1000000001_balance")
-    assert float(balance.state) == 150.25
     meter_state = state_for(hass, "eirc_spb_1000000001_m1_0")
     assert float(meter_state.state) == 123.45
 
@@ -270,8 +267,6 @@ async def test_coordinator_refresh_updates_states(hass: HomeAssistant):
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    balance = state_for(hass, "eirc_spb_1000000001_balance")
-    assert float(balance.state) == 999.0
     meter_state = state_for(hass, "eirc_spb_1000000001_m1_0")
     assert float(meter_state.state) == 150.0
 
@@ -283,10 +278,6 @@ def test_entity_precision_contract():
     data = build_data()
     account = data.accounts["a1"]
     water = data.meters["m1"]
-    assert (
-        sensor.BalanceSensor(coordinator, account)._attr_suggested_display_precision
-        == 2
-    )
     assert (
         sensor.AccrualsSensor(coordinator, account)._attr_suggested_display_precision
         == 2
@@ -387,6 +378,7 @@ async def test_meter_entity_names_use_scale_and_serial(hass: HomeAssistant):
     )
 
 
+
 def test_energy_meter_name_uses_subservice_name():
     from custom_components.eirc_spb.sensor import MeterSensor
 
@@ -406,7 +398,7 @@ def test_energy_meter_name_uses_subservice_name():
     entity = MeterSensor(
         coordinator, account, meter, Scale(scale_id="2", name="День")
     )
-    assert entity._attr_name == "Электроэнергия День (ПУ № 333333)"
+    assert entity._attr_name == "Электроэнергия день (ПУ № 333333)"
 
 
 def test_water_meter_name_uses_subservice_not_scale():
@@ -428,7 +420,7 @@ def test_water_meter_name_uses_subservice_not_scale():
     entity = MeterSensor(
         coordinator, account, meter, Scale(scale_id="0", name="Иная шкала")
     )
-    assert entity._attr_name == "Горячее водоснабжение (ПУ № 111111)"
+    assert entity._attr_name == "Водоснабжение горячее (ПУ № 111111)"
 
 
 async def test_entity_names_clean_and_ids_carry_els(hass: HomeAssistant):
@@ -439,14 +431,6 @@ async def test_entity_names_clean_and_ids_carry_els(hass: HomeAssistant):
     state = hass.states.get(water_id)
     assert state.attributes["friendly_name"] == "Услуга 5 (ПУ № 100000)"
     assert state.entity_id.startswith("sensor.test_els_1000000001_")
-
-    balance_id = erreg.async_get_entity_id(
-        "sensor", DOMAIN, "eirc_spb_1000000001_balance"
-    )
-    balance = hass.states.get(balance_id)
-    assert balance.attributes["friendly_name"] == "Баланс"
-    assert balance.entity_id.startswith("sensor.test_els_1000000001_")
-
 
 async def test_provider_sensors_created_and_added_dynamically(hass: HomeAssistant):
     data = build_data()
@@ -479,3 +463,63 @@ async def test_provider_sensors_created_and_added_dynamically(hass: HomeAssistan
     assert new_id is not None
     assert float(hass.states.get(new_id).state) == 300.0
     assert float(hass.states.get(prov_id).state) == 1600.0
+
+
+def test_water_service_name_reorders_vodosnabzhenie():
+    from custom_components.eirc_spb.sensor import MeterSensor
+
+    coordinator = MagicMock()
+    coordinator.data = None
+    account = Account(account_id="a1", number="1000000001", address="")
+    meter = Meter(
+        meter_id="m4",
+        account_id="a1",
+        name="ИПУ ХВС",
+        device_class="water",
+        unit="куб.м.",
+        serial="222222",
+        subservice_name="Холодное водоснабжение",
+        scales=[],
+    )
+    entity = MeterSensor(coordinator, account, meter, Scale(scale_id="0"))
+    assert entity._attr_name == "Водоснабжение холодное (ПУ № 222222)"
+
+
+def test_hot_water_reorders_too():
+    from custom_components.eirc_spb.sensor import MeterSensor
+
+    coordinator = MagicMock()
+    coordinator.data = None
+    account = Account(account_id="a1", number="1000000001", address="")
+    meter = Meter(
+        meter_id="m5",
+        account_id="a1",
+        name="ИПУ ГВС",
+        device_class="water",
+        unit="куб.м.",
+        serial="111111",
+        subservice_name="Горячее водоснабжение",
+        scales=[],
+    )
+    entity = MeterSensor(coordinator, account, meter, Scale(scale_id="0"))
+    assert entity._attr_name == "Водоснабжение горячее (ПУ № 111111)"
+
+
+def test_energy_tariff_decapitalized():
+    from custom_components.eirc_spb.sensor import MeterSensor
+
+    coordinator = MagicMock()
+    coordinator.data = None
+    account = Account(account_id="a1", number="1000000001", address="")
+    meter = Meter(
+        meter_id="m6",
+        account_id="a1",
+        name="Электроэнергия.День",
+        device_class="energy",
+        unit="кВт*ч",
+        serial="333333",
+        subservice_name="Электроэнергия",
+        scales=[],
+    )
+    entity = MeterSensor(coordinator, account, meter, Scale(scale_id="2", name="День"))
+    assert entity._attr_name == "Электроэнергия день (ПУ № 333333)"

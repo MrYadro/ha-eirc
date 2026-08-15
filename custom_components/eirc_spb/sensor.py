@@ -58,6 +58,19 @@ async def async_setup_entry(
     coordinator.async_add_listener(_sync_providers)
 
 
+def _service_display_name(name: str) -> str:
+    head, _, tail = name.partition(" водоснабжение")
+    if tail == "" and head != name:
+        return f"Водоснабжение {head.lower()}"
+    return name
+
+
+def _decapitalize_word(word: str) -> str:
+    if len(word) > 1 and word[0].isupper() and word[1:].islower():
+        return word[0].lower() + word[1:]
+    return word
+
+
 def _device(account: Account) -> DeviceInfo:
     tenancy = account.tenancy_full or account.tenancy_short
     parts = [p for p in (account.alias, " ".join(filter(None, (tenancy, account.number)))) if p]
@@ -75,7 +88,6 @@ def _build_entities(coordinator: EircSpbCoordinator) -> list[SensorEntity]:
     for account in data.accounts.values():
         entities.extend(
             [
-                BalanceSensor(coordinator, account),
                 AccrualsSensor(coordinator, account),
                 PaymentsSensor(coordinator, account),
                 CurrentBillSensor(coordinator, account),
@@ -108,17 +120,6 @@ class _AccountSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], Sen
     @property
     def account(self) -> Account | None:
         return self.coordinator.data.accounts.get(self._account_id)
-
-
-class BalanceSensor(_AccountSensor):
-    _key = "balance"
-    _attr_state_class = SensorStateClass.TOTAL
-    _attr_name = "Баланс"
-
-    @property
-    def native_value(self) -> float | None:
-        account = self.account
-        return account.balance if account else None
 
 
 class AccrualsSensor(_AccountSensor):
@@ -241,9 +242,9 @@ class MeterSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], Sensor
             f"{DOMAIN}_{account.number}_{meter.meter_id}_{scale.scale_id}"
         )
         self._attr_device_info = _device(account)
-        base_name = meter.subservice_name or meter.name
+        base_name = _service_display_name(meter.subservice_name or meter.name)
         if meter.device_class == "energy" and scale.name:
-            base_name = f"{base_name} {scale.name}"
+            base_name = f"{base_name} {_decapitalize_word(scale.name)}"
         if meter.serial:
             self._attr_name = f"{base_name} (ПУ № {meter.serial})"
         else:
