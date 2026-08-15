@@ -376,9 +376,30 @@ async def test_meter_entity_names_use_scale_and_serial(hass: HomeAssistant):
     )
     t1_id = erreg.async_get_entity_id("sensor", DOMAIN, "eirc_spb_1000000001_m2_2")
     assert hass.states.get(t1_id).attributes["friendly_name"].endswith(
-        "T1 (ПУ № 200000)"
+        "Электроэнергия T1 (ПУ № 200000)"
     )
     no_scale_id = erreg.async_get_entity_id("sensor", DOMAIN, "eirc_spb_1000000001_m3_5")
     assert hass.states.get(no_scale_id).attributes["friendly_name"].endswith(
         "Прочее"
     )
+
+
+def test_energy_meter_name_strips_builtin_pu_suffix():
+    from custom_components.eirc_spb.sensor import MeterSensor
+
+    coordinator = MagicMock()
+    coordinator.data = None
+    account = Account(account_id="a1", number="1000000001", address="")
+    meter = Meter(
+        meter_id="m9",
+        account_id="a1",
+        name="Электроэнергия.День (ПУ №333333)",
+        device_class="energy",
+        unit="кВт*ч",
+        serial="333333",
+        scales=[],
+    )
+    entity = MeterSensor(
+        coordinator, account, meter, Scale(scale_id="2", name="День")
+    )
+    assert entity._attr_name == "Электроэнергия.День День (ПУ № 333333)"
