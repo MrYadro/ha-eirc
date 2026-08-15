@@ -383,7 +383,7 @@ async def test_meter_entity_names_use_scale_and_serial(hass: HomeAssistant):
     )
     no_scale_id = erreg.async_get_entity_id("sensor", DOMAIN, "eirc_spb_1000000001_m3_5")
     assert hass.states.get(no_scale_id).attributes["friendly_name"].endswith(
-        "Прочее"
+        "Прочее (ПУ № 300000)"
     )
 
 
