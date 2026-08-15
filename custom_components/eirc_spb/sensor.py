@@ -32,6 +32,7 @@ def _device(account: Account) -> DeviceInfo:
         identifiers={(DOMAIN, account.account_id)},
         name=f"ЕИРЦ {account.number}",
         manufacturer="ЕИРЦ СПб",
+        model=account.address or None,
     )
 
 

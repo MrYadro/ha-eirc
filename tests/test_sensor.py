@@ -200,6 +200,7 @@ async def test_device_registered_per_account(hass: HomeAssistant):
     device = dr.async_get(hass).async_get_device({(DOMAIN, "a1")})
     assert device is not None
     assert device.name == "ЕИРЦ 1000000001"
+    assert device.model == "ул. Тестовая, д. 1"
 
 
 def make_client() -> AsyncMock:
