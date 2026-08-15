@@ -11,7 +11,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import ATTR_METER_ID, DOMAIN
+from .const import ATTR_METER_ID, ATTR_SCALE_ID, DOMAIN
 from .exceptions import EircSpbApiError
 from .models import Meter
 
@@ -22,7 +22,7 @@ SERVICE_SEND_METER_READING = "send_meter_reading"
 
 READING_SCHEMA = vol.Schema(
     {
-        vol.Required("scale_id"): vol.Any(int, str),
+        vol.Optional("scale_id"): vol.Any(int, str),
         vol.Required("value"): vol.Coerce(float),
     }
 )
@@ -54,21 +54,39 @@ def _resolve_meter(
 async def async_setup_services(hass: HomeAssistant) -> None:
     async def handle_send_meter_reading(call: ServiceCall) -> ServiceResponse:
         entity_ids = call.data[ATTR_ENTITY_ID]
-        resolved: tuple[EircSpbRuntime, Meter] | None = None
+        resolved: tuple[EircSpbRuntime, Meter, str] | None = None
         error: HomeAssistantError | None = None
         for entity_id in entity_ids:
             try:
-                resolved = _resolve_meter(hass, entity_id)
+                runtime, meter = _resolve_meter(hass, entity_id)
+                resolved = (runtime, meter, entity_id)
                 break
             except HomeAssistantError as err:
                 error = err
         if resolved is None:
             raise error or HomeAssistantError(f"Счётчик не найден: {entity_ids}")
-        runtime, meter = resolved
-        readings = [
-            {"scale_id": str(reading["scale_id"]), "value": reading["value"]}
-            for reading in call.data["readings"]
-        ]
+        runtime, meter, resolved_entity_id = resolved
+        readings = []
+        entity_scale_id = hass.states.get(resolved_entity_id).attributes.get(
+            ATTR_SCALE_ID
+        )
+        untagged = [r for r in call.data["readings"] if "scale_id" not in r]
+        if untagged:
+            if len(call.data["readings"]) > 1:
+                raise HomeAssistantError(
+                    "scale_id обязателен, когда передаётся несколько показаний"
+                )
+            if not entity_scale_id:
+                raise HomeAssistantError(
+                    f"У сущности нет атрибута scale_id: {entity_ids[0]}"
+                )
+        for reading in call.data["readings"]:
+            scale_id = (
+                str(reading["scale_id"])
+                if "scale_id" in reading
+                else str(entity_scale_id)
+            )
+            readings.append({"scale_id": scale_id, "value": reading["value"]})
         try:
             result = await runtime.client.submit_reading(
                 meter.account_id, meter.meter_id, readings

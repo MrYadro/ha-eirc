@@ -20,5 +20,4 @@ send_meter_reading:
         (передаваемое показание).
       required: true
       example:
-        - scale_id: 0
-          value: 12345
+        - value: 12345

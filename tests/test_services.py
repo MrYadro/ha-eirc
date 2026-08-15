@@ -212,3 +212,54 @@ async def test_service_registered_and_removed_with_entry(hass: HomeAssistant):
         assert hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING)
         assert await async_unload_entry(hass, entry) is True
         assert not hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING)
+
+
+async def test_send_reading_infers_scale_id(hass: HomeAssistant):
+    from custom_components.eirc_spb.services import async_setup_services
+
+    runtime = install_runtime(hass)
+    await async_setup_services(hass)
+    hass.states.async_set(
+        "sensor.m", "1", {ATTR_METER_ID: "m1", ATTR_SCALE_ID: "2"}
+    )
+    await call_service(
+        hass,
+        {"entity_id": "sensor.m", "readings": [{"value": 456}]},
+        return_response=False,
+    )
+    runtime.client.submit_reading.assert_awaited_once_with(
+        "a1", "m1", [{"scale_id": "2", "value": 456.0}]
+    )
+
+
+async def test_send_reading_rejects_multiple_untagged_readings(hass: HomeAssistant):
+    from custom_components.eirc_spb.services import async_setup_services
+
+    install_runtime(hass)
+    await async_setup_services(hass)
+    hass.states.async_set(
+        "sensor.m", "1", {ATTR_METER_ID: "m1", ATTR_SCALE_ID: "2"}
+    )
+    with pytest.raises(HomeAssistantError):
+        await call_service(
+            hass,
+            {
+                "entity_id": "sensor.m",
+                "readings": [{"value": 1}, {"value": 2}],
+            },
+            return_response=False,
+        )
+
+
+async def test_send_reading_entity_without_scale_id(hass: HomeAssistant):
+    from custom_components.eirc_spb.services import async_setup_services
+
+    install_runtime(hass)
+    await async_setup_services(hass)
+    hass.states.async_set("sensor.m", "1", {ATTR_METER_ID: "m1"})
+    with pytest.raises(HomeAssistantError):
+        await call_service(
+            hass,
+            {"entity_id": "sensor.m", "readings": [{"value": 1}]},
+            return_response=False,
+        )
