@@ -365,3 +365,16 @@ def test_device_name_without_alias():
         tenancy_short="ЕЛС",
     )
     assert _device(account)["name"] == "ЕЛС 71000000003"
+
+
+async def test_meter_entity_names_use_scale_and_serial(hass: HomeAssistant):
+    await setup_sensors(hass)
+    erreg = er.async_get(hass)
+    water_id = erreg.async_get_entity_id("sensor", DOMAIN, "eirc_spb_1000000001_m1_0")
+    assert hass.states.get(water_id).attributes["friendly_name"] == "Услуга 5 100000"
+    t1_id = erreg.async_get_entity_id("sensor", DOMAIN, "eirc_spb_1000000001_m2_2")
+    assert hass.states.get(t1_id).attributes["friendly_name"] == "T1 200000"
+    no_scale_id = erreg.async_get_entity_id("sensor", DOMAIN, "eirc_spb_1000000001_m3_5")
+    assert (
+        hass.states.get(no_scale_id).attributes["friendly_name"] == "Прочее"
+    )
