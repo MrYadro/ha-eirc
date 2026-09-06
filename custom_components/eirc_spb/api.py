@@ -256,10 +256,31 @@ class EircSpbApiClient:
                 raise EircSpbApiError(f"file download failed ({resp.status})")
             return data
 
+    async def _get_text(self, path: str) -> str | None:
+        async with self._lock:
+            if self._state is None:
+                await self._login()
+        assert self._state is not None
+        timeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT_SECONDS)
+        headers = {
+            "Authorization": f"Bearer {self._state.auth}",
+            "User-Agent": USER_AGENT,
+        }
+        if self._verification_token:
+            headers[HEADER_AUTH_VERIFICATION] = self._verification_token
+        async with self._session.request(
+            "GET", f"{BASE_URL}/{path}", headers=headers, timeout=timeout
+        ) as resp:
+            if resp.status >= 400:
+                raise EircSpbApiError(f"request failed ({resp.status})")
+            return (await resp.text()).strip()
+
     async def download_bill(self, account_id: str, bill_id: str) -> bytes | None:
-        data = await self._request(
-            "GET", f"v7/accounts/{account_id}/payments/bills/{bill_id}/uuid"
+        data = await self._get_text(
+            f"v7/accounts/{account_id}/payments/bills/{bill_id}/uuid"
         )
-        if not isinstance(data, str) or not data:
+        if not data or data == "null":
             return None
+        if data.startswith('"') and data.endswith('"'):
+            data = data[1:-1]
         return await self._download_file(data)

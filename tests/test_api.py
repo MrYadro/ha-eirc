@@ -320,7 +320,7 @@ async def test_data_request_sends_user_agent_with_injected_session(aresponses):
     aresponses.add(HOST, "/api/v8/accounts", "GET", accounts_handler)
     accounts = await c.get_accounts()
     assert accounts[0].number == "1000000001"
-    assert seen["user_agent"] == "home-assistant-eirc-spb/2026.9.4"
+    assert seen["user_agent"] == "home-assistant-eirc-spb/2026.9.5"
     await c.close()
     assert not injected.closed
     await injected.close()
@@ -503,6 +503,24 @@ async def test_download_bill_returns_pdf_bytes(aresponses, client):
         "/api/v7/accounts/910000001/payments/bills/26071000000001/uuid",
         "GET",
         web.json_response("file-uuid-1"),
+    )
+    aresponses.add(
+        HOST,
+        "/api/v1/file/file-uuid-1",
+        "GET",
+        web.Response(body=b"%PDF-1.4 fake", content_type="application/pdf"),
+    )
+    data = await client.download_bill("910000001", "26071000000001")
+    assert data == b"%PDF-1.4 fake"
+
+
+async def test_download_bill_uuid_as_bare_text(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST,
+        "/api/v7/accounts/910000001/payments/bills/26071000000001/uuid",
+        "GET",
+        web.Response(text="file-uuid-1", content_type="application/json"),
     )
     aresponses.add(
         HOST,
