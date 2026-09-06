@@ -86,18 +86,24 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
             fresh = [b for b in bill_ids if b not in known]
             if fresh:
                 fresh_set = set(fresh)
-                details = [
-                    {
-                        "id": str(b.get("id", "")),
-                        "amount": b.get("amount"),
-                        "timestamp": b.get("timestamp"),
-                    }
-                    for b in [
-                        await self._client.get_bill(bill_id)
-                        for bill_id in reversed(fresh)
-                    ]
-                    if b
-                ]
+                details = []
+                for bill_id in reversed(fresh):
+                    try:
+                        bill = await self._client.get_bill(bill_id)
+                    except EircSpbAuthError:
+                        raise
+                    except EircSpbApiError as err:
+                        self._warn("history", err)
+                        continue
+                    if not bill:
+                        continue
+                    details.append(
+                        {
+                            "id": str(bill.get("id", "")),
+                            "amount": bill.get("amount"),
+                            "timestamp": bill.get("timestamp"),
+                        }
+                    )
                 known.update(bill_ids)
                 history = details + [
                     h

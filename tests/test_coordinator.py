@@ -491,6 +491,48 @@ async def test_new_payment_event_fires_once(hass: HomeAssistant):
     assert len(events) == 1
 
 
+async def test_coordinator_history_isolates_bill_failures(hass: HomeAssistant):
+    client = make_history_client([make_account("a1", "1000000001")])
+    client.get_bill.side_effect = [
+        EircSpbApiError("stale"),
+        BILL_DETAIL,
+    ]
+    coordinator = build_coordinator(hass, client, ["a1"])
+    await coordinator.async_config_entry_first_refresh()
+    account = coordinator.data.accounts["a1"]
+    assert account.bills_history == [
+        {"id": "26071000000001", "amount": 7633.65, "timestamp": "14.02.2026 00:00:00"},
+    ]
+    assert account.last_payment == {
+        "id": "900000001",
+        "amount": 150.0,
+        "date": "2026-08-15T10:11:32",
+        "status": "SUCCESS",
+    }
+
+
+async def test_coordinator_history_does_not_retry_failed_bill(
+    hass: HomeAssistant,
+):
+    client = make_history_client([make_account("a1", "1000000001")])
+    calls: list[str] = []
+
+    def get_bill(bill_id: str) -> dict:
+        calls.append(bill_id)
+        if bill_id == "26061000000001":
+            raise EircSpbApiError("stale")
+        return BILL_DETAIL
+
+    client.get_bill.side_effect = get_bill
+    coordinator = build_coordinator(hass, client, ["a1"])
+    await coordinator.async_config_entry_first_refresh()
+    assert calls == ["26061000000001", "26071000000001"]
+    calls.clear()
+    coordinator._history_fetched_at.clear()
+    await coordinator.async_refresh()
+    assert calls == []
+
+
 async def test_coordinator_history_failure_is_non_fatal(hass: HomeAssistant):
     client = make_history_client([make_account("a1", "1000000001")])
     client.get_bills_history.side_effect = EircSpbApiError("boom")
