@@ -492,6 +492,52 @@ async def test_last_payment_groups_same_day_transactions(hass: HomeAssistant):
     }
 
 
+async def test_last_payment_null_id_falls_back_to_list_id(hass: HomeAssistant):
+    client = make_history_client([make_account("a1", "1000000001")])
+    client.get_bills_history.return_value = []
+    client.get_payments_history.return_value = ["48FAKE0ZXAVGU8"]
+    client.get_payment.side_effect = [
+        {
+            "id": None,
+            "status": "SUCCESS",
+            "timestamp": "2026-08-15T00:00",
+            "details": [{"checked": True, "charge": {"accrued": 1718.93}}],
+        }
+    ]
+    coordinator = build_coordinator(hass, client, ["a1"])
+    await coordinator.async_config_entry_first_refresh()
+    assert coordinator.data.accounts["a1"].last_payment == {
+        "id": "48FAKE0ZXAVGU8",
+        "amount": 1718.93,
+        "date": "2026-08-15T00:00",
+        "status": "SUCCESS",
+    }
+
+
+async def test_last_payment_isolates_record_failures(hass: HomeAssistant):
+    client = make_history_client([make_account("a1", "1000000001")])
+    client.get_bills_history.return_value = []
+    client.get_payments_history.return_value = ["900000001", "900000004"]
+    client.get_payment.side_effect = [
+        EircSpbApiError("transient"),
+        {
+            "id": "900000004",
+            "status": "SUCCESS",
+            "timestamp": "2026-08-15T00:00",
+            "details": [{"checked": True, "charge": {"accrued": 100.0}}],
+        },
+    ]
+    coordinator = build_coordinator(hass, client, ["a1"])
+    await coordinator.async_config_entry_first_refresh()
+    assert coordinator.last_update_success is True
+    assert coordinator.data.accounts["a1"].last_payment == {
+        "id": "900000004",
+        "amount": 100.0,
+        "date": "2026-08-15T00:00",
+        "status": "SUCCESS",
+    }
+
+
 async def test_new_payment_event_fires_once(hass: HomeAssistant):
     client = make_history_client([make_account("a1", "71000000001")])
     client.get_bills_history.return_value = []

@@ -118,7 +118,11 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
             group: list[tuple[str, dict]] = []
             group_day: str | None = None
             for payment_id in payment_ids[:10]:
-                payment = await self._client.get_payment(payment_id)
+                try:
+                    payment = await self._client.get_payment(payment_id)
+                except EircSpbApiError as err:
+                    self._warn("payments", err)
+                    continue
                 if not payment or not payment.get("timestamp"):
                     continue
                 day = str(payment["timestamp"])[:10]
@@ -133,7 +137,7 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
                     sum(self._payment_amount(p) or 0.0 for _, p in group), 2
                 )
                 self._last_payments[account.account_id] = {
-                    "id": str(first.get("id", first_id)),
+                    "id": str(first.get("id") or first_id),
                     "amount": amount or None,
                     "date": max(str(p.get("timestamp")) for _, p in group),
                     "status": first.get("status"),
