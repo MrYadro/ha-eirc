@@ -494,3 +494,32 @@ async def test_get_bill_and_payment_details(aresponses, client):
     payment = await client.get_payment("900000001")
     assert bill["amount"] == 7633.65
     assert payment["status"] == "SUCCESS"
+
+
+async def test_download_bill_returns_pdf_bytes(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST,
+        "/api/v7/accounts/910000001/payments/bills/26071000000001/uuid",
+        "GET",
+        web.json_response("file-uuid-1"),
+    )
+    aresponses.add(
+        HOST,
+        "/api/v1/file/file-uuid-1",
+        "GET",
+        web.Response(body=b"%PDF-1.4 fake", content_type="application/pdf"),
+    )
+    data = await client.download_bill("910000001", "26071000000001")
+    assert data == b"%PDF-1.4 fake"
+
+
+async def test_download_bill_returns_none_without_uuid(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST,
+        "/api/v7/accounts/910000001/payments/bills/26071000000001/uuid",
+        "GET",
+        ok(None),
+    )
+    assert await client.download_bill("910000001", "26071000000001") is None

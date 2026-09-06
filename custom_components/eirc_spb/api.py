@@ -5,7 +5,14 @@ from typing import Any
 import aiohttp
 
 from .auth import Authenticator, AuthResult, Session
-from .const import BASE_URL, DOMAIN, REQUEST_TIMEOUT_SECONDS, USER_AGENT, VERSION
+from .const import (
+    BASE_URL,
+    DOMAIN,
+    HEADER_AUTH_VERIFICATION,
+    REQUEST_TIMEOUT_SECONDS,
+    USER_AGENT,
+    VERSION,
+)
 from .exceptions import EircSpbApiError, EircSpbAuthError
 from .models import (
     Account,
@@ -231,3 +238,28 @@ class EircSpbApiClient:
     async def get_payment(self, payment_id: str) -> dict:
         data = await self._request("GET", f"v8/payments/{payment_id}")
         return data if isinstance(data, dict) else {}
+
+    async def _download_file(self, file_id: str) -> bytes:
+        assert self._state is not None
+        timeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT_SECONDS)
+        headers = {
+            "Authorization": f"Bearer {self._state.auth}",
+            "User-Agent": USER_AGENT,
+        }
+        if self._verification_token:
+            headers[HEADER_AUTH_VERIFICATION] = self._verification_token
+        async with self._session.request(
+            "GET", f"{BASE_URL}/v1/file/{file_id}", headers=headers, timeout=timeout
+        ) as resp:
+            data = await resp.read()
+            if resp.status >= 400:
+                raise EircSpbApiError(f"file download failed ({resp.status})")
+            return data
+
+    async def download_bill(self, account_id: str, bill_id: str) -> bytes | None:
+        data = await self._request(
+            "GET", f"v7/accounts/{account_id}/payments/bills/{bill_id}/uuid"
+        )
+        if not isinstance(data, str) or not data:
+            return None
+        return await self._download_file(data)
