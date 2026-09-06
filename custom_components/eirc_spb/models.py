@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass, field
 
 _UTILITY_DEVICE_CLASS = {"WATER": "water", "ELECTRICITY": "energy"}
@@ -54,6 +55,25 @@ class BillsPayments:
     accruals_breakdown: dict[str, float]
     fines: float = 0.0
     provider_accruals: dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class MeterPassport:
+    serial: str
+    model: str | None = None
+    install_date: str | None = None
+    verification_date: str | None = None
+    check_interval: str | None = None
+
+
+@dataclass
+class AccountDetails:
+    area: str | None = None
+    rooms: str | None = None
+    owner: str | None = None
+    management_company: str | None = None
+    tariffs: dict[str, str | float] = field(default_factory=dict)
+    meters: dict[str, MeterPassport] = field(default_factory=dict)
 
 
 def parse_accounts(raw: list) -> list[Account]:
@@ -136,3 +156,58 @@ def _group_by_provider(entries: list) -> dict[str, list]:
         if provider:
             groups.setdefault(provider, []).append(entry)
     return groups
+
+
+_METER_HEADER_RE = re.compile(r"приборе учёта\s*№\s*(\S+)")
+_RATE_RE = re.compile(r"^\d{1,6},\d{1,3}$")
+_APARTMENT_FIELDS = {
+    "Общая площадь": "area",
+    "Кол-во комнат": "rooms",
+    "Владелец": "owner",
+    "Наименование УК": "management_company",
+}
+_PASSPORT_BY_CODE = {
+    "METER_MODEL": "model",
+    "METER_DATE": "install_date",
+    "METER_CHECK_DATE": "verification_date",
+    "CHECK_INTERVAL": "check_interval",
+}
+_PASSPORT_BY_NAME = {
+    "Модель": "model",
+    "Дата установки": "install_date",
+    "Дата истечения поверки": "verification_date",
+    "МПИ (лет)": "check_interval",
+}
+
+
+def _rate(value: str) -> str | float:
+    value = value.strip()
+    if _RATE_RE.match(value):
+        return float(value.replace(",", "."))
+    return value
+
+
+def parse_details(raw: list) -> AccountDetails:
+    details = AccountDetails()
+    for block in raw:
+        header = str(block.get("header") or "")
+        content = block.get("content") or []
+        if header == "Информация о жилом помещении":
+            for item in content:
+                field = _APARTMENT_FIELDS.get(str(item.get("name") or ""))
+                if field and item.get("value") is not None:
+                    setattr(details, field, str(item["value"]))
+        elif match := _METER_HEADER_RE.search(header):
+            passport = MeterPassport(serial=match.group(1))
+            for item in content:
+                key = _PASSPORT_BY_CODE.get(str(item.get("code") or "")) or (
+                    _PASSPORT_BY_NAME.get(str(item.get("name") or ""))
+                )
+                if key and item.get("value") is not None:
+                    setattr(passport, key, str(item["value"]))
+            details.meters[passport.serial] = passport
+        else:
+            for item in content:
+                if item.get("name") == "Тарифная ставка" and item.get("value"):
+                    details.tariffs[header] = _rate(str(item["value"]))
+    return details

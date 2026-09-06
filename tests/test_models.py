@@ -3,6 +3,7 @@ from pathlib import Path
 
 from custom_components.eirc_spb.models import (
     parse_accounts,
+    parse_details,
     parse_finance,
     parse_meters,
 )
@@ -93,6 +94,40 @@ def test_parse_finance_excludes_unchecked_fines():
     raw[0]["fine"]["balance"]["value"] = 55.55
     bp = parse_finance(raw)
     assert bp.fines == 55.55
+
+
+def test_parse_details_apartment():
+    d = parse_details(load("account_details"))
+    assert d.area == "Тест"
+    assert d.rooms == "Тест"
+    assert d.owner == "Тест"
+    assert d.management_company == "Тест"
+
+
+def test_parse_details_meter_passports_by_serial():
+    d = parse_details(load("account_details"))
+    assert set(d.meters) == {"100001", "100003", "100005", "100007", "100008"}
+    electric = d.meters["100008"]
+    assert electric.verification_date == "14.11.2036"
+    assert electric.install_date == "07.10.2020"
+    water = d.meters["100001"]
+    assert water.verification_date == "17.10.2025"
+    assert water.install_date == "14.01.2020"
+
+
+def test_parse_details_tariffs():
+    d = parse_details(load("account_details"))
+    assert d.tariffs["Услуга 2"] == 22.36
+    assert d.tariffs["Услуга 13"] == "2,131,47"
+
+
+def test_parse_details_ignores_unknown_blocks():
+    d = parse_details(
+        [{"header": "Непонятный блок", "content": [{"name": "x", "value": "y"}]}]
+    )
+    assert d.tariffs == {}
+    assert d.meters == {}
+    assert d.area is None
 
 
 
