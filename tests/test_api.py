@@ -257,6 +257,56 @@ async def test_submit_reading_dict_response_passthrough(aresponses, client):
     assert result == {"code": "42", "message": "accepted"}
 
 
+async def test_validate_reading_ok(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST,
+        "/api/v7/accounts/910000001/meters/100000/scales/0/reading/234.854/validate",
+        "POST",
+        ok(load("validate_ok")),
+    )
+    result = await client.validate_reading("910000001", "100000", "0", 234.854)
+    assert result["status"] == "ok"
+
+
+async def test_validate_reading_warning_on_message(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST,
+        "/api/v7/accounts/910000001/meters/100000/scales/0/reading/234.854/validate",
+        "POST",
+        ok({"message": "Ваш расход больше обычного"}),
+    )
+    result = await client.validate_reading("910000001", "100000", "0", 234.854)
+    assert result["status"] == "warning"
+    assert result["message"] == "Ваш расход больше обычного"
+
+
+async def test_validate_reading_reject(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST,
+        "/api/v7/accounts/910000001/meters/100000/scales/0/reading/234.854/validate",
+        "POST",
+        ok(load("validate_reject"), status=400),
+    )
+    result = await client.validate_reading("910000001", "100000", "0", 234.854)
+    assert result["status"] == "error"
+    assert "расход" in result["message"]
+
+
+async def test_validate_reading_unavailable(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST,
+        "/api/v7/accounts/910000001/meters/100000/scales/0/reading/234.854/validate",
+        "POST",
+        web.Response(status=404, text=""),
+    )
+    result = await client.validate_reading("910000001", "100000", "0", 234.854)
+    assert result["status"] == "unavailable"
+
+
 async def test_data_request_sends_user_agent_with_injected_session(aresponses):
     injected = aiohttp.ClientSession()
     c = EircSpbApiClient("login", "password", session=injected)

@@ -131,8 +131,28 @@ class EircSpbApiClient:
             if status == 401:
                 raise EircSpbAuthError(_message(data), _code(data))
             if status >= 400:
-                raise EircSpbApiError(_message(data), _code(data))
+                raise EircSpbApiError(_message(data), _code(data) or str(status))
             return data
+
+    async def validate_reading(
+        self, account_id: str, registration: str, scale_id: str, value: float
+    ) -> dict:
+        try:
+            data = await self._request(
+                "POST",
+                f"v7/accounts/{account_id}/meters/{registration}/scales/"
+                f"{int(scale_id)}/reading/{value}/validate",
+                {},
+            )
+        except EircSpbApiError as err:
+            if err.code == "404":
+                return {"status": "unavailable", "message": None}
+            return {"status": "error", "message": str(err)}
+        message = _message(data) if data != {} else None
+        if message == "API request failed":
+            message = None
+        status = "warning" if message else "ok"
+        return {"status": status, "message": message}
 
     async def get_accounts(self) -> list[Account]:
         data = await self._request("GET", "v8/accounts")
