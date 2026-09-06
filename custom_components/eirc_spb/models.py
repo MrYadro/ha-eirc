@@ -20,6 +20,8 @@ class Meter:
     device_class: str | None = None
     unit: str = ""
     serial: str | None = None
+    model: str | None = None
+    install_date: str | None = None
     verification_date: str | None = None
     subservice_name: str | None = None
     scales: list[Scale] = field(default_factory=list)
@@ -46,6 +48,7 @@ class Account:
     provider_accruals: dict[str, float] = field(default_factory=dict)
     auto_payment: bool | None = None
     delivery: str | None = None
+    details: "AccountDetails | None" = None
 
 
 @dataclass

@@ -1,4 +1,5 @@
 import logging
+import time
 from dataclasses import dataclass, field
 from datetime import timedelta
 
@@ -9,8 +10,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import EircSpbApiClient
 from .const import DOMAIN
 from .exceptions import EircSpbApiError, EircSpbAuthError
-from .models import Account, Meter
+from .models import Account, AccountDetails, Meter
 from .notifications import NotificationDetector
+
+DETAILS_TTL_SECONDS = 24 * 3600
 
 
 @dataclass
@@ -38,12 +41,27 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
         self._detector: NotificationDetector | None = None
         self._persistent = False
         self._warned: set[str] = set()
+        self._details_cache: dict[str, tuple[float, AccountDetails]] = {}
 
     def _warn(self, code: str, err: Exception) -> None:
         if code in self._warned:
             return
         self._warned.add(code)
         self.logger.warning("eirc_spb %s failed: %s", code, err)
+
+    async def _async_get_details(self, account_id: str) -> AccountDetails | None:
+        cached = self._details_cache.get(account_id)
+        if cached and time.monotonic() - cached[0] < DETAILS_TTL_SECONDS:
+            return cached[1]
+        try:
+            details = await self._client.get_details(account_id)
+        except EircSpbAuthError:
+            raise
+        except EircSpbApiError as err:
+            self._warn("details", err)
+            return cached[1] if cached else None
+        self._details_cache[account_id] = (time.monotonic(), details)
+        return details
 
     def setup_notifications(self, persistent: bool, deadline_days: int = 3) -> None:
         self._persistent = persistent
@@ -89,6 +107,18 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
                 data.accounts[account.account_id] = account
                 for meter in await self._client.get_meters(account.account_id):
                     data.meters[meter.meter_id] = meter
+                details = await self._async_get_details(account.account_id)
+                if details is not None:
+                    account.details = details
+                    for meter in data.meters.values():
+                        if meter.account_id != account.account_id:
+                            continue
+                        passport = details.meters.get(meter.serial or "")
+                        if passport is None:
+                            continue
+                        meter.verification_date = passport.verification_date
+                        meter.model = passport.model
+                        meter.install_date = passport.install_date
         except EircSpbAuthError as err:
             raise ConfigEntryAuthFailed from err
         except EircSpbApiError as err:

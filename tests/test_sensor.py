@@ -219,6 +219,7 @@ def make_client() -> AsyncMock:
     client.get_current_bill.return_value = BILL
     client.get_meters.return_value = list(build_data().meters.values())
     client.get_reading_period.return_value = READING_PERIOD
+    client.get_details.return_value = None
     return client
 
 
@@ -557,10 +558,10 @@ async def test_provider_entity_id_english_prefix(hass: HomeAssistant):
 def test_meter_object_id_utility_mapping():
     from custom_components.eirc_spb.sensor import _meter_object_id
 
-    hot = Meter("900001", "a1", "x", "water", "м3", "111111", None, "Горячее водоснабжение", [])
-    cold = Meter("900002", "a1", "x", "water", "м3", "222222", None, "Холодное водоснабжение", [])
-    day = Meter("z1", "a1", "x", "energy", "кВт", "333333", None, "Электроэнергия", [])
-    night = Meter("z1", "a1", "x", "energy", "кВт", "333333", None, "Электроэнергия", [])
+    hot = Meter("900001", "a1", "x", "water", "м3", "111111", None, None, None, "Горячее водоснабжение", [])
+    cold = Meter("900002", "a1", "x", "water", "м3", "222222", None, None, None, "Холодное водоснабжение", [])
+    day = Meter("z1", "a1", "x", "energy", "кВт", "333333", None, None, None, "Электроэнергия", [])
+    night = Meter("z1", "a1", "x", "energy", "кВт", "333333", None, None, None, "Электроэнергия", [])
     assert _meter_object_id(hot, Scale("0")) == "hot_water_111111"
     assert _meter_object_id(cold, Scale("0")) == "cold_water_222222"
     assert _meter_object_id(day, Scale("2", "День")) == "electricity_day_333333"

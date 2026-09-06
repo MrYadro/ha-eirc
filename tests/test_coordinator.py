@@ -23,8 +23,10 @@ from custom_components.eirc_spb.coordinator import EircSpbCoordinator, EircSpbDa
 from custom_components.eirc_spb.exceptions import EircSpbApiError, EircSpbAuthError
 from custom_components.eirc_spb.models import (
     Account,
+    AccountDetails,
     BillsPayments,
     Meter,
+    MeterPassport,
     Scale,
 )
 
@@ -45,6 +47,21 @@ READING_PERIOD = {
     "forbidden": False,
     "message": None,
 }
+DETAILS = AccountDetails(
+    area="32.5",
+    rooms="1",
+    owner="Тест",
+    management_company='ООО "Тест 1"',
+    tariffs={"Услуга 2": 22.36},
+    meters={
+        "m1": MeterPassport(
+            serial="m1",
+            model="НАРТИС",
+            install_date="22.11.2021",
+            verification_date="30.12.2037",
+        )
+    },
+)
 
 
 def make_account(account_id: str, number: str) -> Account:
@@ -69,6 +86,12 @@ def make_meter(account_id: str = "a1") -> Meter:
     )
 
 
+def make_detailed_meter() -> Meter:
+    m = make_meter()
+    m.serial = "m1"
+    return m
+
+
 def make_client(accounts: list[Account]) -> AsyncMock:
     client = AsyncMock()
     client.get_accounts.return_value = accounts
@@ -77,6 +100,7 @@ def make_client(accounts: list[Account]) -> AsyncMock:
     client.get_current_bill.return_value = BILL
     client.get_meters.return_value = [make_meter()]
     client.get_reading_period.return_value = READING_PERIOD
+    client.get_details.return_value = None
     return client
 
 
@@ -111,6 +135,41 @@ async def test_coordinator_merges_data(hass: HomeAssistant):
     client.get_finance.assert_awaited_once_with("a1")
     client.get_current_bill.assert_awaited_once_with("a1")
     client.get_meters.assert_awaited_once_with("a1")
+
+
+async def test_coordinator_merges_details(hass: HomeAssistant):
+    client = make_client([make_account("a1", "1000000001")])
+    client.get_details.return_value = DETAILS
+    client.get_meters.return_value = [make_detailed_meter()]
+    coordinator = build_coordinator(hass, client, ["a1"])
+    await coordinator.async_config_entry_first_refresh()
+    account = coordinator.data.accounts["a1"]
+    assert account.details is DETAILS
+    meter = coordinator.data.meters["m1"]
+    assert meter.verification_date == "30.12.2037"
+    assert meter.model == "НАРТИС"
+    assert meter.install_date == "22.11.2021"
+    client.get_details.assert_awaited_once_with("a1")
+
+
+async def test_coordinator_details_cached_within_24h(hass: HomeAssistant):
+    client = make_client([make_account("a1", "1000000001")])
+    client.get_details.return_value = DETAILS
+    client.get_meters.return_value = [make_detailed_meter()]
+    coordinator = build_coordinator(hass, client, ["a1"])
+    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
+    client.get_details.assert_awaited_once()
+
+
+async def test_coordinator_details_failure_is_non_fatal(hass: HomeAssistant):
+    client = make_client([make_account("a1", "1000000001")])
+    client.get_details.side_effect = EircSpbApiError("boom")
+    client.get_meters.return_value = [make_detailed_meter()]
+    coordinator = build_coordinator(hass, client, ["a1"])
+    await coordinator.async_config_entry_first_refresh()
+    assert coordinator.last_update_success is True
+    assert coordinator.data.accounts["a1"].details is None
 
 
 async def test_coordinator_filters_accounts(hass: HomeAssistant):
