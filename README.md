@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="custom_components/eirc_spb/brand/dark_logo.png">
+  <img src="custom_components/eirc_spb/brand/logo.png" width="380" alt="ЕИРЦ Санкт-Петербурга">
+</picture>
+
 # ЕИРЦ Санкт-Петербурга (eirc_spb) для Home Assistant
 
 [![Открыть в Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MrYadro&repository=ha-eirc)
