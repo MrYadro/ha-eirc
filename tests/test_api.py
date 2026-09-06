@@ -373,13 +373,11 @@ async def test_get_unread_notifications(aresponses, client):
     aresponses.add(
         HOST, "/api/v6/users/current/session", "PATCH", web.Response(status=200)
     )
-    import re as _re
+    seen = {}
 
-    aresponses.add(
-        HOST,
-        _re.compile(r"^/api/v6/notifications"),
-        "GET",
-        ok(
+    async def notifications_handler(request):
+        seen["query"] = dict(request.query)
+        return ok(
             [
                 {
                     "id": "57295301",
@@ -389,8 +387,16 @@ async def test_get_unread_notifications(aresponses, client):
                     "timestamp": "11.08.2026 15:35",
                 }
             ]
-        ),
+        )
+
+    aresponses.add(
+        HOST, "/api/v6/notifications", "GET", notifications_handler
     )
     items = await client.get_unread_notifications()
     assert len(items) == 1
     assert items[0]["id"] == "57295301"
+    assert seen["query"] == {
+        "type": "bell",
+        "state": "unread",
+        "limit": "20",
+    }
