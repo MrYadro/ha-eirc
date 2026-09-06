@@ -205,7 +205,7 @@ class EircSpbFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._client is not None
         if self._client.verification_token:
             data[CONF_VERIFICATION_TOKEN] = self._client.verification_token
-        return self.async_create_entry(title="ЕИРЦ СПб", data=data)
+        return self.async_create_entry(title="ЕИРЦ Санкт-Петербурга", data=data)
 
     async def async_step_reauth(
         self, entry_data: dict[str, Any]

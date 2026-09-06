@@ -198,7 +198,7 @@ async def test_single_account_autoselected(hass: HomeAssistant):
         result = await submit(hass, result["flow_id"], {"login": LOGIN, "password": "pw"})
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["data"]["accounts"] == ["a1"]
-        assert result["title"] == "ЕИРЦ СПб"
+        assert result["title"] == "ЕИРЦ Санкт-Петербурга"
 
 
 async def test_reauth_successful(hass: HomeAssistant):

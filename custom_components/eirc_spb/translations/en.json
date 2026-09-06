@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "EIRC SPb",
+        "title": "ЕИРЦ Санкт-Петербурга",
         "description": "Sign in to your EIRC personal account (ikus.pesc.ru)",
         "data": {
           "login": "Phone (+7…) or e-mail",

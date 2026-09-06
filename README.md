@@ -1,4 +1,4 @@
-# ЕИРЦ СПб (eirc_spb) для Home Assistant
+# ЕИРЦ Санкт-Петербурга (eirc_spb) для Home Assistant
 
 [![Открыть в Home Assistant](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MrYadro&repository=ha-eirc)
 
@@ -42,14 +42,14 @@
 1. Откройте **HACS** в боковом меню Home Assistant.
 2. Справа вверху нажмите **⋮** (три точки) → **Пользовательские репозитории**.
 3. В поле «Репозиторий" введите: `MrYadro/ha-eirc`, в поле "Категория" выберите **Интеграция** → **Добавить**.
-4. Нажмите **+ Эксплорер и загрузка репозиториев**, найдите **EIRC SPb** → **Скачать**.
+4. Нажмите **+ Эксплорер и загрузка репозиториев**, найдите **ЕИРЦ Санкт-Петербурга** → **Скачать**.
 5. Перезапустите Home Assistant.
 
 Если HACS ещё не установлен — инструкция: [hacs.xyz/docs/setup/download](https://www.hacs.xyz/docs/setup/download).
 
 ## Настройка
 
-1. Настройки → Устройства и службы → **Добавить интеграцию** → **EIRC SPb**.
+1. Настройки → Устройства и службы → **Добавить интеграцию** → **ЕИРЦ Санкт-Петербурга**.
 2. Введите логин и пароль от личного кабинета. Логин — телефон в формате `+7…` **или** e-mail.
 3. Если сервер требует подтверждения входа, выберите способ получения кода:
    **E-mail**, **SMS** или **Звонок** — код придёт выбранным способом, введите его.
@@ -109,7 +109,7 @@ triggers:
 actions:
   - action: notify.telegram
     data:
-      title: ЕИРЦ СПб
+      title: ЕИРЦ Санкт-Петербурга
       message: >
         {{ trigger.event.data.title | default('Новый счёт ' ~ trigger.event.data.bill_id,
         true) }}
