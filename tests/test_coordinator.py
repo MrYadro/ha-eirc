@@ -299,3 +299,19 @@ async def test_notifications_fire_events_and_persistent(hass: HomeAssistant):
     store = _async_get_or_create_notifications(hass)
     assert "eirc_spb_57295301" in store
     assert store["eirc_spb_57295301"]["title"] == "Новый счет доступен для оплаты"
+
+
+async def test_notifications_failure_warns_once(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+):
+    client = make_client([make_account("a1", "1000000001")])
+    client.get_unread_notifications.side_effect = EircSpbApiError("boom", "500")
+    coordinator = build_coordinator(hass, client, ["a1"])
+    coordinator.setup_notifications(persistent=False)
+    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
+    warnings = [
+        r for r in caplog.records if r.levelname == "WARNING" and "notifications" in r.message
+    ]
+    assert len(warnings) == 1
+    assert coordinator.last_update_success is True

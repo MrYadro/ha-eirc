@@ -37,6 +37,13 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
         self._account_ids = account_ids
         self._detector: NotificationDetector | None = None
         self._persistent = False
+        self._warned: set[str] = set()
+
+    def _warn(self, code: str, err: Exception) -> None:
+        if code in self._warned:
+            return
+        self._warned.add(code)
+        self.logger.warning("eirc_spb %s failed: %s", code, err)
 
     def setup_notifications(self, persistent: bool, deadline_days: int = 3) -> None:
         self._persistent = persistent
@@ -92,7 +99,8 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
                     self._emit(n)
             try:
                 native = await self._client.get_unread_notifications()
-            except EircSpbApiError:
+            except EircSpbApiError as err:
+                self._warn("notifications", err)
                 native = []
             for n in self._detector.native(native):
                 self._emit(n)
