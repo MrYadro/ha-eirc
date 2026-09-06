@@ -19,6 +19,7 @@ class NotificationDetector:
         self._deadline_days = deadline_days
         self._today = today or date.today()
         self._last_bills: dict[str, str | None] = {}
+        self._last_payments: dict[str, str | None] = {}
         self._notified_deadlines: set[tuple[str, str]] = set()
         self._seen_native_ids: set[str] = set()
 
@@ -59,6 +60,30 @@ class NotificationDetector:
                         "deadline_day": account.reading_deadline_day,
                     }
                 )
+        return out
+
+    def payment(self, account: Account) -> list[dict]:
+        out: list[dict] = []
+        last = self._last_payments.get(account.account_id, None)
+        current = account.last_payment
+        if (
+            current is not None
+            and current.get("id") != last
+            and last is not None
+        ):
+            out.append(
+                {
+                    "type": "payment",
+                    "account_id": account.account_id,
+                    "number": account.number,
+                    "payment_id": current.get("id"),
+                    "amount": current.get("amount"),
+                    "date": current.get("date"),
+                    "status": current.get("status"),
+                }
+            )
+        if current is not None:
+            self._last_payments[account.account_id] = current.get("id")
         return out
 
     def native(self, items: list[dict]) -> list[dict]:

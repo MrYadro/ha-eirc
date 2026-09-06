@@ -602,6 +602,25 @@ async def test_provider_entity_id_english_prefix(hass: HomeAssistant):
     assert entity_id == "sensor.test_els_1000000001_accruals_ooo_test_5"
 
 
+async def test_last_payment_sensor(hass: HomeAssistant):
+    data = build_data()
+    data.accounts["a1"].last_payment = {
+        "id": "900000001",
+        "amount": 150.0,
+        "date": "2026-08-15T10:11:32",
+        "status": "SUCCESS",
+    }
+    await setup_sensors(hass, data)
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, "eirc_spb_1000000001_last_payment"
+    )
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 150.0
+    assert state.attributes["payment_id"] == "900000001"
+    assert state.attributes["date"] == "2026-08-15T10:11:32"
+    assert state.attributes["status"] == "SUCCESS"
+
+
 def test_meter_object_id_utility_mapping():
     from custom_components.eirc_spb.sensor import _meter_object_id
 

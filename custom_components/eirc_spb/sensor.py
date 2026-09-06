@@ -111,6 +111,7 @@ def _build_entities(coordinator: EircSpbCoordinator) -> list[SensorEntity]:
             [
                 AccrualsSensor(coordinator, account),
                 CurrentBillSensor(coordinator, account),
+                LastPaymentSensor(coordinator, account),
                 FinesSensor(coordinator, account),
                 ReadingDeadlineSensor(coordinator, account),
             ]
@@ -207,6 +208,34 @@ class CurrentBillSensor(_AccountSensor):
             attrs["bill_id"] = account.current_bill_id
         if account.accruals_period is not None:
             attrs["timestamp"] = account.accruals_period
+        return attrs
+
+
+class LastPaymentSensor(_AccountSensor):
+    _key = "last_payment"
+    _object_id = "last_payment"
+    _attr_state_class = SensorStateClass.TOTAL
+    _attr_name = "Последний платёж"
+
+    @property
+    def native_value(self) -> float | None:
+        account = self.account
+        if account is None or account.last_payment is None:
+            return None
+        return account.last_payment.get("amount")
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        account = self.account
+        if account is None or account.last_payment is None:
+            return {}
+        attrs = {}
+        if account.last_payment.get("id") is not None:
+            attrs["payment_id"] = account.last_payment["id"]
+        if account.last_payment.get("date") is not None:
+            attrs["date"] = account.last_payment["date"]
+        if account.last_payment.get("status") is not None:
+            attrs["status"] = account.last_payment["status"]
         return attrs
 
 

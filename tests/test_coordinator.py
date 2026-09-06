@@ -456,6 +456,41 @@ async def test_coordinator_history_sorts_by_parsed_date(hass: HomeAssistant):
     }
 
 
+async def test_new_payment_event_fires_once(hass: HomeAssistant):
+    client = make_history_client([make_account("a1", "71000000001")])
+    client.get_bills_history.return_value = []
+    coordinator = build_coordinator(hass, client, ["a1"])
+    coordinator.setup_notifications(persistent=False)
+    events = []
+    hass.bus.async_listen("eirc_spb_new_payment", events.append)
+    await coordinator.async_config_entry_first_refresh()
+    assert events == []
+    new_payment = {
+        "id": "900000003",
+        "status": "SUCCESS",
+        "timestamp": "2026-09-01T10:00:00",
+        "details": [{"checked": True, "charge": {"accrued": 200.0}}],
+    }
+
+    def get_payment(payment_id: str) -> dict:
+        if payment_id == "900000001":
+            return PAYMENT_DETAIL
+        if payment_id == "900000003":
+            return new_payment
+        raise AssertionError(f"unexpected payment id: {payment_id}")
+
+    client.get_payment.side_effect = get_payment
+    client.get_payments_history.return_value = ["900000003", "900000001", "900000002"]
+    coordinator._history_fetched_at.clear()
+    await coordinator.async_refresh()
+    assert len(events) == 1
+    assert events[0].data["payment_id"] == "900000003"
+    assert events[0].data["amount"] == 200.0
+    coordinator._history_fetched_at.clear()
+    await coordinator.async_refresh()
+    assert len(events) == 1
+
+
 async def test_coordinator_history_failure_is_non_fatal(hass: HomeAssistant):
     client = make_history_client([make_account("a1", "1000000001")])
     client.get_bills_history.side_effect = EircSpbApiError("boom")

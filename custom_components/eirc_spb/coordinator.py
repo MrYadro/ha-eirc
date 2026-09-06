@@ -222,6 +222,8 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
             for account in data.accounts.values():
                 for n in self._detector.feed(account):
                     self._emit(n)
+                for n in self._detector.payment(account):
+                    self._emit(n)
             try:
                 native = await self._client.get_unread_notifications()
             except EircSpbApiError as err:
@@ -236,6 +238,7 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
             "new_bill": f"{DOMAIN}_new_bill",
             "reading_deadline": f"{DOMAIN}_reading_deadline",
             "native": f"{DOMAIN}_notification",
+            "payment": f"{DOMAIN}_new_payment",
         }[n["type"]]
         self.hass.bus.async_fire(event_type, n)
         if not self._persistent:
@@ -250,6 +253,13 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
             notification_id = f"{DOMAIN}_bill_{n['account_id']}_{n['bill_id']}"
             title = "Новый счёт"
             message = f"Лицевой счёт {n['number']}: новый счёт {n['bill_id']} на {n['amount']} ₽"
+        elif n["type"] == "payment":
+            notification_id = f"{DOMAIN}_payment_{n['account_id']}_{n['payment_id']}"
+            title = "Новый платёж"
+            message = (
+                f"Лицевой счёт {n['number']}: платёж {n['payment_id']} "
+                f"на {n['amount']} ₽ ({n['date']})"
+            )
         else:
             notification_id = (
                 f"{DOMAIN}_deadline_{n['account_id']}_{n['deadline_day']}"
