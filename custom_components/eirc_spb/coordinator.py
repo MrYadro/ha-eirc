@@ -1,7 +1,7 @@
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -46,6 +46,8 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
         self._details_cache: dict[str, tuple[float, AccountDetails]] = {}
         self._history_fetched_at: dict[str, float] = {}
         self._known_bill_ids: dict[str, set[str]] = {}
+        self._bills_history: dict[str, list[dict]] = {}
+        self._last_payments: dict[str, dict | None] = {}
 
     def _warn(self, code: str, err: Exception) -> None:
         if code in self._warned:
@@ -68,6 +70,8 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
         return details
 
     async def _async_update_history(self, account: Account) -> None:
+        account.bills_history = self._bills_history.get(account.account_id, [])
+        account.last_payment = self._last_payments.get(account.account_id)
         fetched = self._history_fetched_at.get(account.account_id)
         if fetched and time.monotonic() - fetched < HISTORY_TTL_SECONDS:
             return
@@ -95,16 +99,18 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
                     if b
                 ]
                 known.update(bill_ids)
-                account.bills_history = details + [
-                    h for h in account.bills_history if h["id"] not in fresh_set
+                history = details + [
+                    h
+                    for h in self._bills_history.get(account.account_id, [])
+                    if h["id"] not in fresh_set
                 ]
-                account.bills_history.sort(
-                    key=lambda h: str(h["timestamp"]), reverse=True
-                )
+                history.sort(key=self._history_sort_key, reverse=True)
+                self._bills_history[account.account_id] = history
             payment_ids = await self._client.get_payments_history(
                 account.account_id, date_from.isoformat(), date_to.isoformat()
             )
-            baseline = account.last_payment["date"] if account.last_payment else None
+            last = self._last_payments.get(account.account_id)
+            baseline = last["date"] if last else None
             for payment_id in payment_ids[:5]:
                 payment = await self._client.get_payment(payment_id)
                 if not payment:
@@ -116,12 +122,24 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
                     "status": payment.get("status"),
                 }
                 if baseline is None or str(entry["date"]) > baseline:
-                    account.last_payment = entry
+                    self._last_payments[account.account_id] = entry
                 break
         except EircSpbAuthError:
             raise
         except EircSpbApiError as err:
             self._warn("history", err)
+        account.bills_history = self._bills_history.get(account.account_id, [])
+        account.last_payment = self._last_payments.get(account.account_id)
+
+    @staticmethod
+    def _history_sort_key(entry: dict) -> str:
+        raw = str(entry["timestamp"])
+        for fmt in ("%d.%m.%Y %H:%M:%S", "%d.%m.%Y"):
+            try:
+                return datetime.strptime(raw, fmt).isoformat()
+            except ValueError:
+                continue
+        return raw
 
     @staticmethod
     def _payment_amount(payment: dict) -> float | None:
