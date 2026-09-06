@@ -18,7 +18,7 @@ HEADER_CAPTCHA_NONE = "none"
 HEADER_WITH_TOTP = "withTotp"
 HEADER_AUTH_VERIFICATION = "Auth-Verification"
 
-VERSION = "2026.9.2"
+VERSION = "2026.10.0"
 USER_AGENT = f"home-assistant-eirc-spb/{VERSION}"
 REQUEST_TIMEOUT_SECONDS = 30
 

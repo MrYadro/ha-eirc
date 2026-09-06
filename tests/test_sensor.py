@@ -621,6 +621,26 @@ async def test_last_payment_sensor(hass: HomeAssistant):
     assert state.attributes["status"] == "SUCCESS"
 
 
+async def test_bill_sensor_history_attribute(hass: HomeAssistant):
+    data = build_data()
+    data.accounts["a1"].current_bill_id = "26071000000001"
+    data.accounts["a1"].bills_history = [
+        {
+            "id": "26071000000001",
+            "amount": 7633.65,
+            "timestamp": "14.02.2026 00:00:00",
+        }
+    ]
+    await setup_sensors(hass, data)
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, "eirc_spb_1000000001_bill"
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes["history"][0]["id"] == "26071000000001"
+    assert state.attributes["bill_id"] == "26071000000001"
+    assert state.attributes["account_id"] == "a1"
+
+
 def test_meter_object_id_utility_mapping():
     from custom_components.eirc_spb.sensor import _meter_object_id
 

@@ -203,11 +203,13 @@ class CurrentBillSensor(_AccountSensor):
         account = self.account
         if account is None:
             return {}
-        attrs = {}
+        attrs = {ATTR_ACCOUNT_ID: self._account_id}
         if account.current_bill_id is not None:
             attrs["bill_id"] = account.current_bill_id
         if account.accruals_period is not None:
             attrs["timestamp"] = account.accruals_period
+        if account.bills_history:
+            attrs["history"] = account.bills_history
         return attrs
 
 
