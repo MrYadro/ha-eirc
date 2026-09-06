@@ -115,21 +115,29 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
             payment_ids = await self._client.get_payments_history(
                 account.account_id, date_from.isoformat(), date_to.isoformat()
             )
-            last = self._last_payments.get(account.account_id)
-            baseline = last["date"] if last else None
-            for payment_id in payment_ids[:5]:
+            group: list[tuple[str, dict]] = []
+            group_day: str | None = None
+            for payment_id in payment_ids[:10]:
                 payment = await self._client.get_payment(payment_id)
-                if not payment:
+                if not payment or not payment.get("timestamp"):
                     continue
-                entry = {
-                    "id": str(payment.get("id", payment_id)),
-                    "amount": self._payment_amount(payment),
-                    "date": payment.get("timestamp"),
-                    "status": payment.get("status"),
+                day = str(payment["timestamp"])[:10]
+                if group_day is None:
+                    group_day = day
+                if day != group_day:
+                    break
+                group.append((payment_id, payment))
+            if group:
+                first_id, first = group[0]
+                amount = round(
+                    sum(self._payment_amount(p) or 0.0 for _, p in group), 2
+                )
+                self._last_payments[account.account_id] = {
+                    "id": str(first.get("id", first_id)),
+                    "amount": amount or None,
+                    "date": max(str(p.get("timestamp")) for _, p in group),
+                    "status": first.get("status"),
                 }
-                if baseline is None or str(entry["date"]) > baseline:
-                    self._last_payments[account.account_id] = entry
-                break
         except EircSpbAuthError:
             raise
         except EircSpbApiError as err:

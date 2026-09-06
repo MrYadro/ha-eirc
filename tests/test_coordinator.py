@@ -119,7 +119,7 @@ def make_client(accounts: list[Account]) -> AsyncMock:
 def make_history_client(accounts):
     client = make_client(accounts)
     client.get_bills_history.return_value = ["26071000000001", "26061000000001"]
-    client.get_payments_history.return_value = ["900000001", "900000002"]
+    client.get_payments_history.return_value = ["900000001"]
     client.get_bill.side_effect = [
         BILL_DETAIL,
         {"id": "26061000000001", "amount": 7000.0, "timestamp": "14.01.2026 00:00:00"},
@@ -453,6 +453,42 @@ async def test_coordinator_history_sorts_by_parsed_date(hass: HomeAssistant):
         "id": "26071000000001",
         "amount": 7633.65,
         "timestamp": "01.01.2026 00:00:00",
+    }
+
+
+async def test_last_payment_groups_same_day_transactions(hass: HomeAssistant):
+    client = make_history_client([make_account("a1", "1000000001")])
+    client.get_bills_history.return_value = []
+    external = {
+        "id": "900000004",
+        "status": "SUCCESS",
+        "timestamp": "2026-08-15T00:00",
+        "details": [{"checked": True, "charge": {"accrued": 1718.93}}],
+    }
+
+    def get_payment(payment_id: str) -> dict:
+        if payment_id == "900000001":
+            return PAYMENT_DETAIL
+        if payment_id == "900000004":
+            return external
+        if payment_id == "900000002":
+            return {
+                "id": "900000002",
+                "status": "SUCCESS",
+                "timestamp": "2026-07-15T10:07:34",
+                "details": [{"checked": True, "charge": {"accrued": 999.0}}],
+            }
+        raise AssertionError(f"unexpected payment id: {payment_id}")
+
+    client.get_payment.side_effect = get_payment
+    client.get_payments_history.return_value = ["900000001", "900000004", "900000002"]
+    coordinator = build_coordinator(hass, client, ["a1"])
+    await coordinator.async_config_entry_first_refresh()
+    assert coordinator.data.accounts["a1"].last_payment == {
+        "id": "900000001",
+        "amount": 1868.93,
+        "date": "2026-08-15T10:11:32",
+        "status": "SUCCESS",
     }
 
 
