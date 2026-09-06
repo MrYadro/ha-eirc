@@ -49,6 +49,8 @@ class Account:
     auto_payment: bool | None = None
     delivery: str | None = None
     details: "AccountDetails | None" = None
+    bills_history: list[dict] = field(default_factory=list)
+    last_payment: dict | None = None
 
 
 @dataclass

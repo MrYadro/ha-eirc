@@ -38,6 +38,16 @@ FINANCE = BillsPayments(
     provider_accruals={'ООО "Тест 5"': 1500.0},
 )
 BILL = {"id": "26071000000001", "amount": 7633.65, "timestamp": "14.02.2026 00:00:00"}
+BILL_DETAIL = {"id": "26071000000001", "amount": 7633.65, "timestamp": "14.02.2026 00:00:00"}
+PAYMENT_DETAIL = {
+    "id": "900000001",
+    "status": "SUCCESS",
+    "timestamp": "2026-08-15T10:11:32",
+    "details": [
+        {"checked": True, "charge": {"accrued": 100.0}},
+        {"checked": True, "charge": {"accrued": 50.0}},
+    ],
+}
 READING_PERIOD = {
     "acceptanceParameters": {
         "name": "Август 2026",
@@ -100,6 +110,21 @@ def make_client(accounts: list[Account]) -> AsyncMock:
     client.get_current_bill.return_value = BILL
     client.get_meters.return_value = [make_meter()]
     client.get_reading_period.return_value = READING_PERIOD
+    client.get_details.return_value = None
+    client.get_bills_history.return_value = []
+    client.get_payments_history.return_value = []
+    return client
+
+
+def make_history_client(accounts):
+    client = make_client(accounts)
+    client.get_bills_history.return_value = ["26071000000001", "26061000000001"]
+    client.get_payments_history.return_value = ["900000001", "900000002"]
+    client.get_bill.side_effect = [
+        BILL_DETAIL,
+        {"id": "26061000000001", "amount": 7000.0, "timestamp": "14.01.2026 00:00:00"},
+    ]
+    client.get_payment.side_effect = [PAYMENT_DETAIL]
     client.get_details.return_value = None
     return client
 
@@ -374,3 +399,32 @@ async def test_notifications_failure_warns_once(
     ]
     assert len(warnings) == 1
     assert coordinator.last_update_success is True
+
+
+async def test_coordinator_fetches_history_daily(hass: HomeAssistant):
+    client = make_history_client([make_account("a1", "1000000001")])
+    coordinator = build_coordinator(hass, client, ["a1"])
+    await coordinator.async_config_entry_first_refresh()
+    account = coordinator.data.accounts["a1"]
+    assert account.bills_history == [
+        {"id": "26071000000001", "amount": 7633.65, "timestamp": "14.02.2026 00:00:00"},
+        {"id": "26061000000001", "amount": 7000.0, "timestamp": "14.01.2026 00:00:00"},
+    ]
+    assert account.last_payment == {
+        "id": "900000001",
+        "amount": 150.0,
+        "date": "2026-08-15T10:11:32",
+        "status": "SUCCESS",
+    }
+    await coordinator.async_refresh()
+    client.get_bills_history.assert_awaited_once()
+    client.get_payments_history.assert_awaited_once()
+
+
+async def test_coordinator_history_failure_is_non_fatal(hass: HomeAssistant):
+    client = make_history_client([make_account("a1", "1000000001")])
+    client.get_bills_history.side_effect = EircSpbApiError("boom")
+    coordinator = build_coordinator(hass, client, ["a1"])
+    await coordinator.async_config_entry_first_refresh()
+    assert coordinator.last_update_success is True
+    assert coordinator.data.accounts["a1"].bills_history == []

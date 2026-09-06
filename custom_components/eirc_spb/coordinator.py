@@ -1,7 +1,7 @@
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import date, timedelta
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -14,6 +14,8 @@ from .models import Account, AccountDetails, Meter
 from .notifications import NotificationDetector
 
 DETAILS_TTL_SECONDS = 24 * 3600
+HISTORY_TTL_SECONDS = 24 * 3600
+HISTORY_WINDOW_DAYS = 365
 
 
 @dataclass
@@ -42,6 +44,8 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
         self._persistent = False
         self._warned: set[str] = set()
         self._details_cache: dict[str, tuple[float, AccountDetails]] = {}
+        self._history_fetched_at: dict[str, float] = {}
+        self._known_bill_ids: dict[str, set[str]] = {}
 
     def _warn(self, code: str, err: Exception) -> None:
         if code in self._warned:
@@ -62,6 +66,78 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
             return cached[1] if cached else None
         self._details_cache[account_id] = (time.monotonic(), details)
         return details
+
+    async def _async_update_history(self, account: Account) -> None:
+        fetched = self._history_fetched_at.get(account.account_id)
+        if fetched and time.monotonic() - fetched < HISTORY_TTL_SECONDS:
+            return
+        self._history_fetched_at[account.account_id] = time.monotonic()
+        date_to = date.today()
+        date_from = date_to - timedelta(days=HISTORY_WINDOW_DAYS)
+        try:
+            known = self._known_bill_ids.setdefault(account.account_id, set())
+            bill_ids = await self._client.get_bills_history(
+                account.account_id, date_from.isoformat(), date_to.isoformat()
+            )
+            fresh = [b for b in bill_ids if b not in known]
+            if fresh:
+                fresh_set = set(fresh)
+                details = [
+                    {
+                        "id": str(b.get("id", "")),
+                        "amount": b.get("amount"),
+                        "timestamp": b.get("timestamp"),
+                    }
+                    for b in [
+                        await self._client.get_bill(bill_id)
+                        for bill_id in reversed(fresh)
+                    ]
+                    if b
+                ]
+                known.update(bill_ids)
+                account.bills_history = details + [
+                    h for h in account.bills_history if h["id"] not in fresh_set
+                ]
+                account.bills_history.sort(
+                    key=lambda h: str(h["timestamp"]), reverse=True
+                )
+            payment_ids = await self._client.get_payments_history(
+                account.account_id, date_from.isoformat(), date_to.isoformat()
+            )
+            baseline = account.last_payment["date"] if account.last_payment else None
+            for payment_id in payment_ids[:5]:
+                payment = await self._client.get_payment(payment_id)
+                if not payment:
+                    continue
+                entry = {
+                    "id": str(payment.get("id", payment_id)),
+                    "amount": self._payment_amount(payment),
+                    "date": payment.get("timestamp"),
+                    "status": payment.get("status"),
+                }
+                if baseline is None or str(entry["date"]) > baseline:
+                    account.last_payment = entry
+                break
+        except EircSpbAuthError:
+            raise
+        except EircSpbApiError as err:
+            self._warn("history", err)
+
+    @staticmethod
+    def _payment_amount(payment: dict) -> float | None:
+        details = payment.get("details") or []
+        try:
+            return round(
+                sum(
+                    float(d["charge"]["accrued"])
+                    for d in details
+                    if d.get("checked")
+                    and d.get("charge", {}).get("accrued") is not None
+                ),
+                2,
+            )
+        except (TypeError, ValueError):
+            return None
 
     def setup_notifications(self, persistent: bool, deadline_days: int = 3) -> None:
         self._persistent = persistent
@@ -119,6 +195,7 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
                         meter.verification_date = passport.verification_date
                         meter.model = passport.model
                         meter.install_date = passport.install_date
+                await self._async_update_history(account)
         except EircSpbAuthError as err:
             raise ConfigEntryAuthFailed from err
         except EircSpbApiError as err:
