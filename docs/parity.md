@@ -50,7 +50,7 @@
 | Пеня | там же | ✅ | Сенсор `…_fines` |
 | Текущий счёт (ЕПД): сумма, id, дата | `GET v8/accounts/{id}/payments/bills/current` | ✅ | Сенсор `…_bill` |
 | История счетов (по месяцам) | `GET v7/bills/payments?account=&from=&to=` → `v8/payments/bills/{id}` | ❌ | Ответ: id, сумма, дата, `canDownload` |
-| Скачивание ЕПД (PDF) | `v8/payments/bills/{id}` + file | ❌ | `canDownload: true`; пригодится для `camera`/`notify` с вложением |
+| Скачивание ЕПД (PDF) | `GET v7/accounts/{id}/payments/bills/{billId}/uuid` → `GET v1/file/{uuid}` | ❌ | **Флоу подтверждён живым спайком (2026-09-06):** uuid-ручка отдаёт file-uuid, `v1/file/{uuid}` — `application/pdf` (~100 КБ, валидный `%PDF`). Реализуется в фазе 5 |
 | История платежей (список id) | `GET v7/payments?account=&from=&to=` | ❌ | |
 | Детализация платежа + чек | `GET v8/payments/{id}` | ❌ | Полная разбивка по услугам, `receiptUrl` |
 | Калькулятор доплаты/переплаты на дату | `v6/accounts/{id}/payments/at/{date}/amount/{sum}` | ❌ | Малоценно для HA |
