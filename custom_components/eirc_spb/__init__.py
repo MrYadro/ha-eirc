@@ -18,7 +18,11 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import EircSpbCoordinator
-from .services import SERVICE_SEND_METER_READING, async_setup_services
+from .services import (
+    SERVICE_DOWNLOAD_BILL,
+    SERVICE_SEND_METER_READING,
+    async_setup_services,
+)
 
 PLATFORMS: list[str] = ["sensor"]
 
@@ -70,4 +74,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not hass.data.get(DOMAIN):
         hass.services.async_remove(DOMAIN, SERVICE_SEND_METER_READING)
+        hass.services.async_remove(DOMAIN, SERVICE_DOWNLOAD_BILL)
     return unloaded

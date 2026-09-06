@@ -77,6 +77,24 @@
           "description": "Submit the readings even if the server warns about unusual consumption."
         }
       }
+    },
+    "download_bill": {
+      "name": "Download bill (EPD)",
+      "description": "Downloads a PDF of the current or specified bill to the Home Assistant www directory.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Current bill sensor (…_current_bill)."
+        },
+        "bill_id": {
+          "name": "Bill number",
+          "description": "Defaults to the current bill."
+        },
+        "path": {
+          "name": "File path",
+          "description": "Absolute path inside the Home Assistant configuration directory."
+        }
+      }
     }
   }
 }

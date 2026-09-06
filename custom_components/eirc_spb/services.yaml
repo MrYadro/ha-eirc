@@ -26,3 +26,25 @@ send_meter_reading:
       description: >-
         Отправить показания, даже если сервер предупреждает о необычном расходе.
       example: "true"
+download_bill:
+  name: Скачать счёт (ЕПД)
+  description: >-
+    Скачивает PDF текущего или указанного счёта в каталог www Home Assistant.
+  fields:
+    entity_id:
+      name: Сущность
+      description: Сенсор текущего счёта (…_current_bill).
+      required: true
+      example: sensor.eirc_spb_1000000001_current_bill
+      selector:
+        entity:
+          integration: eirc_spb
+          domain: sensor
+    bill_id:
+      name: Номер счёта
+      description: По умолчанию — текущий счёт.
+      example: "26071000000001"
+    path:
+      name: Путь файла
+      description: Абсолютный путь внутри каталога конфигурации Home Assistant.
+      example: /config/www/eirc/bill.pdf

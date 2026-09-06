@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -355,4 +356,45 @@ async def test_send_reading_entity_without_scale_id(hass: HomeAssistant):
             hass,
             {"entity_id": "sensor.m", "readings": [{"value": 1}]},
             return_response=False,
+        )
+
+
+async def test_download_bill_service_saves_pdf(hass: HomeAssistant):
+    from custom_components.eirc_spb.services import async_setup_services
+
+    runtime = install_runtime(hass)
+    runtime.client.download_bill = AsyncMock(return_value=b"%PDF-1.4 fake")
+    await async_setup_services(hass)
+    hass.states.async_set(
+        "sensor.bill", "7633.65", {"account_id": "a1", "bill_id": "26071000000001"}
+    )
+    response = await hass.services.async_call(
+        DOMAIN,
+        "download_bill",
+        {"entity_id": "sensor.bill"},
+        blocking=True,
+        return_response=True,
+    )
+    path = Path(response["path"])
+    assert path.read_bytes() == b"%PDF-1.4 fake"
+    assert response["url"].startswith("/local/eirc/")
+    assert response["bytes"] == 13
+    path.unlink()
+
+
+async def test_download_bill_rejects_path_escape(hass: HomeAssistant):
+    from custom_components.eirc_spb.services import async_setup_services
+
+    install_runtime(hass)
+    await async_setup_services(hass)
+    hass.states.async_set(
+        "sensor.bill", "7633.65", {"account_id": "a1", "bill_id": "26071000000001"}
+    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_bill",
+            {"entity_id": "sensor.bill", "path": "/tmp/evil.pdf"},
+            blocking=True,
+            return_response=True,
         )
