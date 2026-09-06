@@ -43,6 +43,8 @@ class Account:
     reading_period_name: str | None = None
     reading_window: str | None = None
     provider_accruals: dict[str, float] = field(default_factory=dict)
+    auto_payment: bool | None = None
+    delivery: str | None = None
 
 
 @dataclass
@@ -67,6 +69,8 @@ def parse_accounts(raw: list) -> list[Account]:
                 alias=str(item.get("alias") or ""),
                 tenancy_full=str(name.get("fulled") or ""),
                 tenancy_short=str(name.get("shorted") or ""),
+                auto_payment=item.get("autoPaymentOn"),
+                delivery=item.get("delivery"),
             )
         )
     return accounts

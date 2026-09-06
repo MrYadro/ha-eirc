@@ -149,6 +149,19 @@ async def test_accruals_sensor(hass: HomeAssistant):
 
 
 
+async def test_accruals_sensor_diagnostic_attributes(hass: HomeAssistant):
+    data = build_data()
+    data.accounts["a1"].auto_payment = True
+    data.accounts["a1"].delivery = "PAPER"
+    await setup_sensors(hass, data)
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, "eirc_spb_1000000001_accruals"
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes["auto_payment"] is True
+    assert state.attributes["delivery"] == "PAPER"
+
+
 async def test_water_meter_sensor(hass: HomeAssistant):
     await setup_sensors(hass)
     state = state_for(hass, "eirc_spb_1000000001_m1_0")

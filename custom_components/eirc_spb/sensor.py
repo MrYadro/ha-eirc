@@ -163,8 +163,13 @@ class AccrualsSensor(_AccountSensor):
         account = self.account
         if account is None:
             return {"period": None}
+        attrs = {"period": account.accruals_period}
+        if account.auto_payment is not None:
+            attrs["auto_payment"] = account.auto_payment
+        if account.delivery is not None:
+            attrs["delivery"] = account.delivery
         return {
-            "period": account.accruals_period,
+            **attrs,
             **account.accruals_breakdown,
         }
 

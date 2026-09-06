@@ -30,6 +30,12 @@ def test_parse_accounts():
     assert acct.accruals_breakdown == {}
 
 
+def test_parse_accounts_maps_diag_fields():
+    accounts = parse_accounts(load("accounts"))
+    assert accounts[0].auto_payment is True
+    assert accounts[0].delivery == "PAPER"
+
+
 def test_parse_meters_and_scales():
     meters = parse_meters(load("meters_info"), account_id="910000001")
     assert len(meters) == 5
