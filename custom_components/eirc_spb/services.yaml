@@ -21,3 +21,8 @@ send_meter_reading:
       required: true
       example:
         - value: 12345
+    confirm:
+      name: Подтвердить
+      description: >-
+        Отправить показания, даже если сервер предупреждает о необычном расходе.
+      example: "true"

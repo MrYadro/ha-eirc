@@ -58,5 +58,25 @@
         }
       }
     }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "Send meter reading",
+      "description": "Submits meter readings to the EIRC personal account. Tariff IDs (scale_id) are taken from the meter sensor attributes.",
+      "fields": {
+        "entity_id": {
+          "name": "Meter sensor",
+          "description": "A sensor of any tariff of this meter."
+        },
+        "readings": {
+          "name": "Readings",
+          "description": "List of readings: scale_id (tariff id from the sensor attributes) and value (the reading to submit)."
+        },
+        "confirm": {
+          "name": "Confirm",
+          "description": "Submit the readings even if the server warns about unusual consumption."
+        }
+      }
+    }
   }
 }

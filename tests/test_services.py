@@ -48,6 +48,9 @@ def install_runtime(hass: HomeAssistant, data: EircSpbData | None = None):
     coordinator.async_request_refresh = AsyncMock()
     client = MagicMock()
     client.submit_reading = AsyncMock(return_value=SUBMIT_RESULT)
+    client.validate_reading = AsyncMock(
+        return_value={"status": "unavailable", "message": None}
+    )
     runtime = EircSpbRuntime(client=client, coordinator=coordinator)
     hass.data.setdefault(DOMAIN, {})["test_entry"] = runtime
     return runtime
@@ -83,7 +86,97 @@ async def test_send_reading_success(hass: HomeAssistant):
         "a1", "m1", [{"scale_id": "0", "value": 123.0}]
     )
     runtime.coordinator.async_request_refresh.assert_awaited_once()
-    assert response == SUBMIT_RESULT
+    assert response == {**SUBMIT_RESULT, "validated": False}
+
+
+async def test_send_reading_validates_first(hass: HomeAssistant):
+    from custom_components.eirc_spb.services import async_setup_services
+
+    runtime = install_runtime(hass)
+    runtime.client.validate_reading = AsyncMock(
+        return_value={"status": "ok", "message": None}
+    )
+    await async_setup_services(hass)
+    hass.states.async_set("sensor.m", "1", {ATTR_METER_ID: "m1", ATTR_SCALE_ID: "0"})
+    response = await call_service(
+        hass,
+        {"entity_id": "sensor.m", "readings": [{"scale_id": 0, "value": 123}]},
+        return_response=True,
+    )
+    runtime.client.validate_reading.assert_awaited_once_with("a1", "m1", "0", 123.0)
+    runtime.client.submit_reading.assert_awaited_once()
+    assert response["validated"] is True
+
+
+async def test_send_reading_error_blocks_submit(hass: HomeAssistant):
+    from custom_components.eirc_spb.services import async_setup_services
+
+    runtime = install_runtime(hass)
+    runtime.client.validate_reading = AsyncMock(
+        return_value={"status": "error", "message": "Показания меньше предыдущих"}
+    )
+    await async_setup_services(hass)
+    hass.states.async_set("sensor.m", "1", {ATTR_METER_ID: "m1", ATTR_SCALE_ID: "0"})
+    with pytest.raises(HomeAssistantError, match="Показания меньше"):
+        await call_service(
+            hass,
+            {"entity_id": "sensor.m", "readings": [{"scale_id": "0", "value": 1}]},
+        )
+    runtime.client.submit_reading.assert_not_awaited()
+
+
+async def test_send_reading_warning_needs_confirm(hass: HomeAssistant):
+    from custom_components.eirc_spb.services import async_setup_services
+
+    runtime = install_runtime(hass)
+    runtime.client.validate_reading = AsyncMock(
+        return_value={"status": "warning", "message": "Ваш расход больше обычного"}
+    )
+    await async_setup_services(hass)
+    hass.states.async_set("sensor.m", "1", {ATTR_METER_ID: "m1", ATTR_SCALE_ID: "0"})
+    with pytest.raises(HomeAssistantError, match="(?i)подтвердите"):
+        await call_service(
+            hass,
+            {"entity_id": "sensor.m", "readings": [{"scale_id": "0", "value": 500}]},
+        )
+    runtime.client.submit_reading.assert_not_awaited()
+
+
+async def test_send_reading_warning_confirmed_submits(hass: HomeAssistant):
+    from custom_components.eirc_spb.services import async_setup_services
+
+    runtime = install_runtime(hass)
+    runtime.client.validate_reading = AsyncMock(
+        return_value={"status": "warning", "message": "Ваш расход больше обычного"}
+    )
+    await async_setup_services(hass)
+    hass.states.async_set("sensor.m", "1", {ATTR_METER_ID: "m1", ATTR_SCALE_ID: "0"})
+    response = await call_service(
+        hass,
+        {
+            "entity_id": "sensor.m",
+            "readings": [{"scale_id": "0", "value": 500}],
+            "confirm": True,
+        },
+        return_response=True,
+    )
+    runtime.client.submit_reading.assert_awaited_once()
+    assert response["validated"] is True
+
+
+async def test_send_reading_validation_unavailable_submits(hass: HomeAssistant):
+    from custom_components.eirc_spb.services import async_setup_services
+
+    runtime = install_runtime(hass)
+    await async_setup_services(hass)
+    hass.states.async_set("sensor.m", "1", {ATTR_METER_ID: "m1", ATTR_SCALE_ID: "0"})
+    response = await call_service(
+        hass,
+        {"entity_id": "sensor.m", "readings": [{"scale_id": "0", "value": 234}]},
+        return_response=True,
+    )
+    runtime.client.submit_reading.assert_awaited_once()
+    assert response["validated"] is False
 
 
 async def test_send_reading_rejection_raises(hass: HomeAssistant):

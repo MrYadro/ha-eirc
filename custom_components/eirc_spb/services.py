@@ -31,6 +31,7 @@ SEND_METER_READING_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
         vol.Required("readings"): vol.All(cv.ensure_list, [READING_SCHEMA]),
+        vol.Optional("confirm", default=False): bool,
     }
 )
 
@@ -87,6 +88,25 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 else str(entity_scale_id)
             )
             readings.append({"scale_id": scale_id, "value": reading["value"]})
+        validated = False
+        for reading in readings:
+            result = await runtime.client.validate_reading(
+                meter.account_id,
+                meter.meter_id,
+                reading["scale_id"],
+                reading["value"],
+            )
+            if result["status"] == "error":
+                raise HomeAssistantError(
+                    result.get("message") or "Сервер отклонил показания"
+                )
+            if result["status"] == "warning" and not call.data["confirm"]:
+                raise HomeAssistantError(
+                    f"Подтвердите отправку (confirm: true): "
+                    f"{result.get('message') or 'необычный расход'}"
+                )
+            if result["status"] in {"ok", "warning"}:
+                validated = True
         try:
             result = await runtime.client.submit_reading(
                 meter.account_id, meter.meter_id, readings
@@ -99,6 +119,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         return {
             "code": str(result.get("code", "")),
             "message": result.get("message", ""),
+            "validated": validated,
         }
 
     hass.services.async_register(
