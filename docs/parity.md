@@ -34,7 +34,7 @@
 |---|---|---|---|
 | Список лицевых счетов | `GET v8/accounts` | ✅ | Выбор счетов в config flow |
 | Адрес лицевого счёта | `GET v8/accounts/{id}/address` | ✅ | Имя устройства |
-| Детали помещения: площадь, комнаты, владелец, УК, проживающие | `GET v7/accounts/{id}/details` | ❌ | Единый запрос; см. раздел 4 |
+| Детали помещения: площадь, комнаты, владелец, УК, проживающие | `GET v7/accounts/{id}/details` | ✅ | Атрибуты `area`/`rooms`/`owner`/`management_company` сенсора `…_accruals` (запрос кэшируется на 24 ч; кол-во проживающих не отображается) |
 | Псевдоним счёта (alias) | `PUT v6/accounts/{id}/alias` | ❌ | В аккаунте уже задан («Тест»), не отображается |
 | Способ получения счёта (бумага/e-mail) | `v8/accounts/{id}/delivery-changing`, `v6/accounts/{id}/bills/delivery` | ❌ | `delivery: "PAPER"` доступно в `v8/accounts` |
 | Группы счетов | `v6/accounts/groups` | ❌ | Малоценно для HA |
@@ -49,15 +49,15 @@
 | Начисления по поставщикам | там же | ✅ | Сенсоры `…_accruals_<поставщик>` |
 | Пеня | там же | ✅ | Сенсор `…_fines` |
 | Текущий счёт (ЕПД): сумма, id, дата | `GET v8/accounts/{id}/payments/bills/current` | ✅ | Сенсор `…_bill` |
-| История счетов (по месяцам) | `GET v7/bills/payments?account=&from=&to=` → `v8/payments/bills/{id}` | ❌ | Ответ: id, сумма, дата, `canDownload` |
-| Скачивание ЕПД (PDF) | `GET v7/accounts/{id}/payments/bills/{billId}/uuid` → `GET v1/file/{uuid}` | ❌ | **Флоу подтверждён живым спайком (2026-09-06):** uuid-ручка отдаёт file-uuid, `v1/file/{uuid}` — `application/pdf` (~100 КБ, валидный `%PDF`). Реализуется в фазе 5 |
-| История платежей (список id) | `GET v7/payments?account=&from=&to=` | ❌ | |
-| Детализация платежа + чек | `GET v8/payments/{id}` | ❌ | Полная разбивка по услугам, `receiptUrl` |
+| История счетов (по месяцам) | `GET v7/bills/payments?account=&from=&to=` → `v8/payments/bills/{id}` | ✅ | Атрибут `history` сенсора `…_bill`: `id`, сумма, дата (новые сверху; обновляется раз в сутки) |
+| Скачивание ЕПД (PDF) | `GET v7/accounts/{id}/payments/bills/{billId}/uuid` → `GET v1/file/{uuid}` | ✅ | Сервис `eirc_spb.download_bill`. Флоу подтверждён живым спайком (2026-09-06): uuid-ручка отдаёт file-uuid, `v1/file/{uuid}` — `application/pdf` (~100 КБ, валидный `%PDF`) |
+| История платежей (список id) | `GET v7/payments?account=&from=&to=` | ✅ | Сенсор `…_last_payment` (последний платёж: `payment_id`, `date`, `status`) и событие `eirc_spb_new_payment` (обновление раз в сутки) |
+| Детализация платежа + чек | `GET v8/payments/{id}` | ❌ | Частично: ручка используется для сенсора `…_last_payment` (сумма/дата/статус); полная разбивка по услугам и `receiptUrl` не передаются |
 | Калькулятор доплаты/переплаты на дату | `v6/accounts/{id}/payments/at/{date}/amount/{sum}` | ❌ | Малоценно для HA |
 | Неподтверждённые платежи | `v6/accounts/{id}/payments/unconfirmed` | 🚫 | Вне скоупа HA |
 | Оплата картой, автоплатёж, сохранённые карты | `v6/payments/*`, `v7/order` | ❌ | Осознанно вне скоупа HA (опасно) |
 | Подписка на счета по e-mail | `v7/users/{id}/subscriptions` | 🚫 | `billSubscriptionsManagement: false` |
-| Тарифы (капремонт, ТКО, содержание и т.д.) | `GET v7/accounts/{id}/details` | ❌ | Той же ручкой `details` |
+| Тарифы (капремонт, ТКО, содержание и т.д.) | `GET v7/accounts/{id}/details` | ✅ | Атрибут `tariffs` сенсора `…_accruals` |
 
 ## 4. Счётчики и показания
 
@@ -66,9 +66,9 @@
 | Список счётчиков + последние показания | `GET v6/accounts/{id}/meters/info` | ✅ | Сенсоры по каждому тарифу, `total_increasing` |
 | Окно и дедлайн передачи показаний | `GET v6/accounts/{id}/reading/period` | ✅ | Сенсор `…_reading_deadline` |
 | Отправка показаний | `POST v8/accounts/{id}/meters/{reg}/reading` | ✅ | Сервис `send_meter_reading`; сайт шлёт через `v7/accounts/{id}/reading/{type}` — оба работают |
-| Предпроверка показаний (расчёт расхода + валидация) | `GET/POST v7/accounts/{id}/meters/{reg}/scales/{s}/reading/{value}/{consumption,validate}` | ❌ | Улучшит UX сервиса: понятная ошибка до отправки |
-| Дата поверки счётчика | `GET v7/accounts/{id}/details` (`METER_CHECK_DATE`) | ❌ | **README утверждает, что API её не отдаёт — отдаёт**, в `details` (напр. 05.08.2037) |
-| Паспорт счётчика: модель, разрядность, дата установки, МПИ | `GET v7/accounts/{id}/details` | ❌ | Можно добавить в атрибуты сенсоров |
+| Предпроверка показаний (расчёт расхода + валидация) | `GET/POST v7/accounts/{id}/meters/{reg}/scales/{s}/reading/{value}/{consumption,validate}` | ✅ | Сервис `send_meter_reading` валидирует показания до отправки; предупреждение о необычном расходе требует `confirm: true` (2026.9.2) |
+| Дата поверки счётчика | `GET v7/accounts/{id}/details` (`METER_CHECK_DATE`) | ✅ | Атрибут `verification_date` сенсоров показаний (из `details`, кэш 24 ч) |
+| Паспорт счётчика: модель, разрядность, дата установки, МПИ | `GET v7/accounts/{id}/details` | ✅ | Атрибуты `model` / `install_date` сенсоров показаний; разрядность и МПИ не отображаются |
 | История показаний (график расхода) | `v6/accounts/{id}/meters/{reg}/indications/history/{from}/{to}` | 🚫 | Роут есть в бандле, сервер отвечает 500 (роль: `indicationsHistory: false`) |
 | Excel-отчёты по показаниям | `v6/users/current/readings/reports/send`, шаблоны | ❌ | Малоценно для HA |
 | Акты снятия показаний | `v6/account/{id}/reading/.../acts` | 🚫 | |
@@ -78,7 +78,7 @@
 
 | Возможность сайта | API | Статус | Комментарий |
 |---|---|---|---|
-| Лента «колокольчик» (непрочитанные) | `GET v6/notifications?type=bell&state=unread` | ⚠️ | Интеграция шлёт `?state=unread&limit=20` **без** `type` — сервер отвечает 500 (`type` обязателен). Ошибка глотается в `coordinator.py:93-96`, нативные уведомления молча не работают |
+| Лента «колокольчик» (непрочитанные) | `GET v6/notifications?type=bell&state=unread` | ✅ | Исправлено в 2026.9.0: запрос включает `type=bell` |
 | Лента (прочитанные, история) | `GET v6/notifications?type=bell&state=read` | ❌ | |
 | Счётчик непрочитанных | `GET v6/notifications/count?type=bell&state=unread` | ❌ | |
 | Отметить прочитанным / переход по ссылке | `PUT v6/notifications/{id}/confirm`, `PUT v6/users/current/notifications/{id}/link` | ❌ | Опасно: подтвердить за пользователем |
@@ -96,13 +96,6 @@
 
 ## Итог
 
-**Реализовано (ядро):** вход с 2FA, счета, адрес, начисления/пеня/ЕПД, счётчики, дедлайн показаний, отправка показаний, события new_bill / reading_deadline.
+**Реализовано:** вход с 2FA, лицевые счета, адрес, детали помещения и тарифы, начисления/пеня/ЕПД, история счетов, последний платёж, счётчики (паспорт ПУ, дата поверки), дедлайн показаний, отправка показаний с предпроверкой и `confirm`, скачивание ЕПД (PDF), события new_bill / new_payment / reading_deadline / уведомления «колокольчика», диагностические атрибуты `auto_payment` / `delivery`.
 
-**Кандидаты на реализацию (по ценности):**
-
-1. **Fix: `type=bell` в запросе уведомлений** — иначе нативная лента не работает (bug).
-2. `v7/accounts/{id}/details` — дата поверки (закрыть обещанный `verification_date`), паспорт ПУ, данные квартиры, тарифы.
-3. История счетов/платежей (`v7/bills/payments`, `v7/payments` + `v8/payments/{id}`) — сенсоры или `extra_state_attributes`.
-4. Предпроверка показаний (`validate`/`consumption`) перед отправкой в сервисе.
-5. Скачивание ЕПД PDF (`v8/payments/bills/{id}`).
-6. `autoPaymentOn` / `delivery` из `v8/accounts` — дешёвые диагностические атрибуты.
+Все кандидаты 1–6 из первой версии отчёта закрыты в релизах 2026.9.0–2026.11.0. Остальное — осознанно вне скоупа HA (оплата, управление TOTP, ЕСИА, смена пароля) или малоценно.

@@ -100,6 +100,22 @@ data:
 
 После успешной отправки данные интеграции автоматически обновляются.
 
+## Скачивание счёта
+
+Сервис `eirc_spb.download_bill` скачивает счёт (ЕПД) в формате PDF:
+
+```yaml
+action: eirc_spb.download_bill
+data:
+  entity_id: sensor.eirc_spb_1000000001_current_bill
+```
+
+- `entity_id` — сенсор текущего счёта; номер счёта берётся из его атрибута `bill_id`;
+- `bill_id` (необязательно) — скачать конкретный счёт из атрибута `history`;
+- `path` (необязательно) — куда сохранить файл; по умолчанию `<каталог конфигурации>/www/eirc/<номер ЕЛС>_<bill_id>.pdf`. Путь должен находиться внутри каталога конфигурации Home Assistant;
+- файлы в каталоге `www/eirc` доступны по адресу `/local/eirc/…`;
+- сервис возвращает ответ `{path, url, bytes}` — его можно использовать в автоматизациях (режим ответа включается опцией `return_response`).
+
 ## Уведомления
 
 Интеграция генерирует события и (по умолчанию) уведомления в интерфейсе Home Assistant (отключается в опциях):
@@ -120,6 +136,8 @@ triggers:
     event_type: eirc_spb_notification
   - trigger: event
     event_type: eirc_spb_new_bill
+  - trigger: event
+    event_type: eirc_spb_new_payment
   - trigger: event
     event_type: eirc_spb_reading_deadline
 actions:
