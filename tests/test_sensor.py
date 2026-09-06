@@ -13,8 +13,10 @@ from custom_components.eirc_spb.const import (
 from custom_components.eirc_spb.coordinator import EircSpbData
 from custom_components.eirc_spb.models import (
     Account,
+    AccountDetails,
     BillsPayments,
     Meter,
+    MeterPassport,
     Scale,
 )
 
@@ -39,6 +41,22 @@ READING_PERIOD = {
     "forbidden": False,
     "message": None,
 }
+
+PASSPORT_DETAILS = AccountDetails(
+    area="32.5",
+    rooms="1",
+    owner="Тест",
+    management_company='ООО "Тест 1"',
+    tariffs={"Услуга 2": 22.36},
+    meters={
+        "100000": MeterPassport(
+            serial="100000",
+            model="НАРТИС",
+            install_date="22.11.2021",
+            verification_date="30.12.2037",
+        )
+    },
+)
 
 
 def build_data() -> EircSpbData:
@@ -160,6 +178,35 @@ async def test_accruals_sensor_diagnostic_attributes(hass: HomeAssistant):
     state = hass.states.get(entity_id)
     assert state.attributes["auto_payment"] is True
     assert state.attributes["delivery"] == "PAPER"
+
+
+async def test_meter_sensor_passport_attributes(hass: HomeAssistant):
+    data = build_data()
+    data.accounts["a1"].details = PASSPORT_DETAILS
+    data.meters["m1"].verification_date = "30.12.2037"
+    data.meters["m1"].model = "НАРТИС"
+    data.meters["m1"].install_date = "22.11.2021"
+    await setup_sensors(hass, data)
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, "eirc_spb_1000000001_m1_0"
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes["verification_date"] == "30.12.2037"
+    assert state.attributes["model"] == "НАРТИС"
+    assert state.attributes["install_date"] == "22.11.2021"
+
+
+async def test_accruals_sensor_apartment_attributes(hass: HomeAssistant):
+    data = build_data()
+    data.accounts["a1"].details = PASSPORT_DETAILS
+    await setup_sensors(hass, data)
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, "eirc_spb_1000000001_accruals"
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes["area"] == "32.5"
+    assert state.attributes["management_company"] == 'ООО "Тест 1"'
+    assert state.attributes["tariffs"] == {"Услуга 2": 22.36}
 
 
 async def test_water_meter_sensor(hass: HomeAssistant):

@@ -168,6 +168,18 @@ class AccrualsSensor(_AccountSensor):
             attrs["auto_payment"] = account.auto_payment
         if account.delivery is not None:
             attrs["delivery"] = account.delivery
+        details = account.details
+        if details is not None:
+            if details.area is not None:
+                attrs["area"] = details.area
+            if details.rooms is not None:
+                attrs["rooms"] = details.rooms
+            if details.owner is not None:
+                attrs["owner"] = details.owner
+            if details.management_company is not None:
+                attrs["management_company"] = details.management_company
+            if details.tariffs:
+                attrs["tariffs"] = details.tariffs
         return {
             **attrs,
             **account.accruals_breakdown,
@@ -300,7 +312,7 @@ class MeterSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], Sensor
     def extra_state_attributes(self) -> dict:
         meter = self.meter
         scale = self.scale
-        return {
+        attrs = {
             ATTR_ACCOUNT_ID: self._account_id,
             ATTR_METER_ID: self._meter_id,
             ATTR_SCALE_ID: self._scale_id,
@@ -308,6 +320,11 @@ class MeterSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], Sensor
             "meter_serial": meter.serial if meter else None,
             "verification_date": meter.verification_date if meter else None,
         }
+        if meter is not None and meter.model is not None:
+            attrs["model"] = meter.model
+        if meter is not None and meter.install_date is not None:
+            attrs["install_date"] = meter.install_date
+        return attrs
 
 
 class ProviderAccrualsSensor(_CleanNameMixin, CoordinatorEntity[EircSpbCoordinator], SensorEntity):
