@@ -205,3 +205,29 @@ class EircSpbApiClient:
             "GET", "v6/notifications?type=bell&state=unread&limit=20"
         )
         return data if isinstance(data, list) else []
+
+    async def get_bills_history(
+        self, account_id: str, date_from: str, date_to: str
+    ) -> list[str]:
+        data = await self._request(
+            "GET",
+            f"v7/bills/payments?account={account_id}&from={date_from}&to={date_to}",
+        )
+        return [str(i) for i in data] if isinstance(data, list) else []
+
+    async def get_payments_history(
+        self, account_id: str, date_from: str, date_to: str
+    ) -> list[str]:
+        data = await self._request(
+            "GET",
+            f"v7/payments?account={account_id}&from={date_from}&to={date_to}",
+        )
+        return [str(i) for i in data] if isinstance(data, list) else []
+
+    async def get_bill(self, bill_id: str) -> dict:
+        data = await self._request("GET", f"v8/payments/bills/{bill_id}")
+        return data if isinstance(data, dict) else {}
+
+    async def get_payment(self, payment_id: str) -> dict:
+        data = await self._request("GET", f"v8/payments/{payment_id}")
+        return data if isinstance(data, dict) else {}

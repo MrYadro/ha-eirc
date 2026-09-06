@@ -460,3 +460,37 @@ async def test_get_unread_notifications(aresponses, client):
         "state": "unread",
         "limit": "20",
     }
+
+
+async def test_get_bills_and_payments_history(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST,
+        "/api/v7/bills/payments?account=910000001&from=2026-01-01&to=2026-09-06",
+        "GET",
+        ok(load("bills_payments")),
+        match_querystring=True,
+    )
+    aresponses.add(
+        HOST,
+        "/api/v7/payments?account=910000001&from=2026-01-01&to=2026-09-06",
+        "GET",
+        ok(load("payments_list")),
+        match_querystring=True,
+    )
+    bills = await client.get_bills_history("910000001", "2026-01-01", "2026-09-06")
+    payments = await client.get_payments_history("910000001", "2026-01-01", "2026-09-06")
+    assert bills[0] == "26071000000001"
+    assert len(payments) == 21
+
+
+async def test_get_bill_and_payment_details(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST, "/api/v8/payments/bills/26071000000001", "GET", ok(load("bill_26071000000001"))
+    )
+    aresponses.add(HOST, "/api/v8/payments/900000001", "GET", ok(load("payment_a")))
+    bill = await client.get_bill("26071000000001")
+    payment = await client.get_payment("900000001")
+    assert bill["amount"] == 7633.65
+    assert payment["status"] == "SUCCESS"
