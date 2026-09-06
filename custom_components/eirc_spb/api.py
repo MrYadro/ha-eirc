@@ -9,9 +9,11 @@ from .const import BASE_URL, DOMAIN, REQUEST_TIMEOUT_SECONDS, USER_AGENT, VERSIO
 from .exceptions import EircSpbApiError, EircSpbAuthError
 from .models import (
     Account,
+    AccountDetails,
     BillsPayments,
     Meter,
     parse_accounts,
+    parse_details,
     parse_finance,
     parse_meters,
 )
@@ -139,6 +141,10 @@ class EircSpbApiClient:
     async def get_address(self, account_id: str) -> str:
         data = await self._request("GET", f"v8/accounts/{account_id}/address")
         return str(data["value"]) if isinstance(data, dict) else ""
+
+    async def get_details(self, account_id: str) -> AccountDetails:
+        data = await self._request("GET", f"v7/accounts/{account_id}/details")
+        return parse_details(data if isinstance(data, list) else [])
 
     async def get_meters(self, account_id: str) -> list[Meter]:
         data = await self._request("GET", f"v6/accounts/{account_id}/meters/info")

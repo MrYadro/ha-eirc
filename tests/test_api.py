@@ -210,6 +210,16 @@ async def test_get_finance(aresponses, client):
     assert finance.balance == pytest.approx(10458.16)
 
 
+async def test_get_details(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST, "/api/v7/accounts/910000001/details", "GET", ok(load("account_details"))
+    )
+    details = await client.get_details("910000001")
+    assert details.meters["100008"].verification_date == "14.11.2036"
+    assert details.tariffs["Услуга 2"] == 22.36
+
+
 
 
 async def test_submit_reading(aresponses, client):
