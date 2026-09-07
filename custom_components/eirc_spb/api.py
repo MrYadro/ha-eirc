@@ -209,9 +209,14 @@ class EircSpbApiClient:
 
     async def get_unread_notifications(self) -> list[dict]:
         data = await self._request(
-            "GET", "v6/notifications?type=bell&state=unread&limit=20"
+            "GET", "v6/notifications?type=bell&state=unread&limit=50"
         )
         return data if isinstance(data, list) else []
+
+    async def confirm_notification(self, native_id: str) -> None:
+        await self._request(
+            "PUT", f"v6/notifications/{native_id.lower()}/confirm"
+        )
 
     async def get_bills_history(
         self, account_id: str, date_from: str, date_to: str

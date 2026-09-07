@@ -304,6 +304,29 @@ async def test_setup_and_unload_entry(hass: HomeAssistant):
     assert async_get_entry_data(hass, entry.entry_id) is None
 
 
+async def test_setup_entry_wires_persistent_notification_unsub(hass: HomeAssistant):
+    entry = make_entry()
+    entry.add_to_hass(hass)
+    client = make_client([make_account("a1", "1000000001")])
+    coordinator = MagicMock()
+    coordinator.async_config_entry_first_refresh = AsyncMock()
+    unsub = MagicMock()
+    coordinator.setup_notifications.return_value = unsub
+    with (
+        patch("custom_components.eirc_spb.EircSpbApiClient", return_value=client),
+        patch(
+            "custom_components.eirc_spb.EircSpbCoordinator", return_value=coordinator
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+            new_callable=AsyncMock,
+        ),
+        patch.object(entry, "async_on_unload") as on_unload,
+    ):
+        assert await async_setup_entry(hass, entry) is True
+    assert (unsub,) in [c.args for c in on_unload.call_args_list]
+
+
 async def test_setup_entry_maps_auth_error(hass: HomeAssistant):
     entry = make_entry()
     entry.add_to_hass(hass)
@@ -383,6 +406,119 @@ async def test_notifications_fire_events_and_persistent(hass: HomeAssistant):
     store = _async_get_or_create_notifications(hass)
     assert "eirc_spb_57295301" in store
     assert store["eirc_spb_57295301"]["title"] == "Новый счет доступен для оплаты"
+
+
+async def test_dismiss_persistent_notification_confirms_on_eirc(hass: HomeAssistant):
+    client = make_client([make_account("a1", "71000000001")])
+    client.get_unread_notifications.return_value = [
+        {
+            "id": "57295301",
+            "type": "BELL",
+            "title": "Новый счет доступен для оплаты",
+            "message": "<p>Счет за июль 2026 г.</p>",
+            "timestamp": "11.08.2026 15:35",
+        }
+    ]
+    coordinator = build_coordinator(hass, client, ["a1"])
+    coordinator.setup_notifications(persistent=True)
+    await coordinator.async_config_entry_first_refresh()
+    await hass.async_block_till_done()
+
+    from homeassistant.components.persistent_notification import async_dismiss
+
+    async_dismiss(hass, "eirc_spb_57295301")
+    await hass.async_block_till_done()
+
+    client.confirm_notification.assert_awaited_once_with("57295301")
+
+
+async def test_eirc_side_dismissal_removes_ha_notification(hass: HomeAssistant):
+    client = make_client([make_account("a1", "71000000001")])
+    client.get_unread_notifications.return_value = [
+        {
+            "id": "57295301",
+            "type": "BELL",
+            "title": "Новый счет доступен для оплаты",
+            "message": "<p>Счет за июль 2026 г.</p>",
+            "timestamp": "11.08.2026 15:35",
+        }
+    ]
+    coordinator = build_coordinator(hass, client, ["a1"])
+    coordinator.setup_notifications(persistent=True)
+    await coordinator.async_config_entry_first_refresh()
+    await hass.async_block_till_done()
+
+    from homeassistant.components.persistent_notification import (
+        _async_get_or_create_notifications,
+    )
+
+    store = _async_get_or_create_notifications(hass)
+    assert "eirc_spb_57295301" in store
+
+    client.get_unread_notifications.return_value = []
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert "eirc_spb_57295301" not in store
+    client.confirm_notification.assert_not_awaited()
+
+
+async def test_confirm_failure_is_non_fatal(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+):
+    client = make_client([make_account("a1", "71000000001")])
+    client.get_unread_notifications.return_value = [
+        {
+            "id": "57295301",
+            "type": "BELL",
+            "title": "Новый счет доступен для оплаты",
+            "message": "<p>Счет за июль 2026 г.</p>",
+            "timestamp": "11.08.2026 15:35",
+        }
+    ]
+    client.confirm_notification.side_effect = EircSpbApiError("boom")
+    coordinator = build_coordinator(hass, client, ["a1"])
+    coordinator.setup_notifications(persistent=True)
+    await coordinator.async_config_entry_first_refresh()
+    await hass.async_block_till_done()
+
+    from homeassistant.components.persistent_notification import async_dismiss
+
+    async_dismiss(hass, "eirc_spb_57295301")
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is True
+    warnings = [
+        r for r in caplog.records if r.levelname == "WARNING" and "confirm" in r.message
+    ]
+    assert len(warnings) == 1
+
+
+async def test_unread_fetch_failure_keeps_ha_notifications(hass: HomeAssistant):
+    client = make_client([make_account("a1", "71000000001")])
+    client.get_unread_notifications.return_value = [
+        {
+            "id": "57295301",
+            "type": "BELL",
+            "title": "Новый счет доступен для оплаты",
+            "message": "<p>Счет за июль 2026 г.</p>",
+            "timestamp": "11.08.2026 15:35",
+        }
+    ]
+    coordinator = build_coordinator(hass, client, ["a1"])
+    coordinator.setup_notifications(persistent=True)
+    await coordinator.async_config_entry_first_refresh()
+    await hass.async_block_till_done()
+
+    client.get_unread_notifications.side_effect = EircSpbApiError("boom")
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    from homeassistant.components.persistent_notification import (
+        _async_get_or_create_notifications,
+    )
+
+    assert "eirc_spb_57295301" in _async_get_or_create_notifications(hass)
 
 
 async def test_notifications_failure_warns_once(

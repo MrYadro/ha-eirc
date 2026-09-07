@@ -48,10 +48,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "scan_interval_hours", DEFAULT_SCAN_INTERVAL_HOURS
     )
     coordinator = EircSpbCoordinator(hass, client, entry.data[CONF_ACCOUNTS], scan_hours)
-    coordinator.setup_notifications(
+    unsub = coordinator.setup_notifications(
         persistent=entry.options.get(CONF_PERSISTENT_NOTIFICATIONS, True),
         deadline_days=entry.options.get(CONF_DEADLINE_DAYS, DEFAULT_DEADLINE_DAYS),
     )
+    if unsub is not None:
+        entry.async_on_unload(unsub)
     await coordinator.async_config_entry_first_refresh()
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = EircSpbRuntime(

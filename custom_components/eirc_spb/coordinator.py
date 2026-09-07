@@ -3,7 +3,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -42,6 +42,7 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
         self._account_ids = account_ids
         self._detector: NotificationDetector | None = None
         self._persistent = False
+        self._active_native: dict[str, str] = {}
         self._warned: set[str] = set()
         self._details_cache: dict[str, tuple[float, AccountDetails]] = {}
         self._history_fetched_at: dict[str, float] = {}
@@ -175,9 +176,32 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
         except (TypeError, ValueError):
             return None
 
-    def setup_notifications(self, persistent: bool, deadline_days: int = 3) -> None:
+    def setup_notifications(
+        self, persistent: bool, deadline_days: int = 3
+    ) -> CALLBACK_TYPE | None:
         self._persistent = persistent
         self._detector = NotificationDetector(deadline_days=deadline_days)
+        if not persistent:
+            return None
+        from homeassistant.components import persistent_notification as pn
+
+        @callback
+        def _on_pn_update(update_type, notifications) -> None:
+            if update_type is not pn.UpdateType.REMOVED:
+                return
+            for notification_id in notifications:
+                for native_id, ha_id in list(self._active_native.items()):
+                    if ha_id == notification_id:
+                        del self._active_native[native_id]
+                        self.hass.async_create_task(self._async_confirm(native_id))
+
+        return pn.async_register_callback(self.hass, _on_pn_update)
+
+    async def _async_confirm(self, native_id: str) -> None:
+        try:
+            await self._client.confirm_notification(native_id)
+        except EircSpbApiError as err:
+            self._warn("confirm", err)
 
     async def _async_update_data(self) -> EircSpbData:
         data = EircSpbData()
@@ -246,9 +270,19 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
                 native = await self._client.get_unread_notifications()
             except EircSpbApiError as err:
                 self._warn("notifications", err)
-                native = []
-            for n in self._detector.native(native):
+                native = None
+            for n in self._detector.native(native or []):
                 self._emit(n)
+            if native is not None and self._persistent and self._active_native:
+                unread_ids = {str(item.get("id", "")) for item in native}
+                for native_id, ha_id in list(self._active_native.items()):
+                    if native_id not in unread_ids:
+                        del self._active_native[native_id]
+                        from homeassistant.components import (
+                            persistent_notification as pn,
+                        )
+
+                        pn.async_dismiss(self.hass, ha_id)
         return data
 
     def _emit(self, n: dict) -> None:
@@ -293,3 +327,5 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
             message=message,
             notification_id=notification_id,
         )
+        if n["type"] == "native":
+            self._active_native[n["native_id"]] = notification_id

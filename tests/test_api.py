@@ -458,7 +458,31 @@ async def test_get_unread_notifications(aresponses, client):
     assert seen["query"] == {
         "type": "bell",
         "state": "unread",
-        "limit": "20",
+        "limit": "50",
+    }
+
+
+async def test_confirm_notification(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST, "/api/v6/users/current/session", "PATCH", web.Response(status=200)
+    )
+    seen = {}
+
+    async def confirm_handler(request):
+        seen["method"] = request.method
+        seen["path"] = request.path
+        seen["body"] = await request.read()
+        return web.Response(status=200)
+
+    aresponses.add(
+        HOST, "/api/v6/notifications/5729ab5301/confirm", "PUT", confirm_handler
+    )
+    await client.confirm_notification("5729AB5301")
+    assert seen == {
+        "method": "PUT",
+        "path": "/api/v6/notifications/5729AB5301/confirm".lower(),
+        "body": b"",
     }
 
 
