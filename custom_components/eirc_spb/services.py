@@ -31,7 +31,7 @@ READING_SCHEMA = vol.Schema(
 
 SEND_METER_READING_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required("readings"): vol.All(cv.ensure_list, [READING_SCHEMA]),
         vol.Optional("confirm", default=False): bool,
     }
@@ -81,23 +81,9 @@ def _resolve_account_and_bill(
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     async def handle_send_meter_reading(call: ServiceCall) -> ServiceResponse:
-        entity_ids = call.data[ATTR_ENTITY_ID]
-        resolved: tuple[EircSpbRuntime, Meter, str] | None = None
-        error: HomeAssistantError | None = None
-        for entity_id in entity_ids:
-            try:
-                runtime, meter = _resolve_meter(hass, entity_id)
-                resolved = (runtime, meter, entity_id)
-                break
-            except HomeAssistantError as err:
-                error = err
-        if resolved is None:
-            raise error or HomeAssistantError(f"Счётчик не найден: {entity_ids}")
-        runtime, meter, resolved_entity_id = resolved
-        readings = []
-        entity_scale_id = hass.states.get(resolved_entity_id).attributes.get(
-            ATTR_SCALE_ID
-        )
+        entity_id = call.data[ATTR_ENTITY_ID]
+        runtime, meter = _resolve_meter(hass, entity_id)
+        entity_scale_id = hass.states.get(entity_id).attributes.get(ATTR_SCALE_ID)
         untagged = [r for r in call.data["readings"] if "scale_id" not in r]
         if untagged:
             if len(call.data["readings"]) > 1:
@@ -106,8 +92,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 )
             if not entity_scale_id:
                 raise HomeAssistantError(
-                    f"У сущности нет атрибута scale_id: {entity_ids[0]}"
+                    f"У сущности нет атрибута scale_id: {entity_id}"
                 )
+        readings = []
         for reading in call.data["readings"]:
             scale_id = (
                 str(reading["scale_id"])
@@ -167,8 +154,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         target = call.data.get("path") or os.path.join(
             default_dir, f"{account.number}_{bill_id}.pdf"
         )
-        target = os.path.abspath(target)
-        config_dir = os.path.abspath(hass.config.config_dir)
+        target = os.path.realpath(target)
+        config_dir = os.path.realpath(hass.config.config_dir)
         if not target.startswith(config_dir + os.sep):
             raise HomeAssistantError(
                 "Путь должен находиться внутри каталога конфигурации Home Assistant"
@@ -183,10 +170,15 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 fh.write(data)
 
         await hass.async_add_executor_job(_write)
-        rel = os.path.relpath(target, hass.config.path("www"))
+        www_dir = os.path.realpath(hass.config.path("www"))
+        url = (
+            f"/local/{os.path.relpath(target, www_dir)}"
+            if target.startswith(www_dir + os.sep)
+            else None
+        )
         return {
             "path": target,
-            "url": f"/local/{rel}",
+            "url": url,
             "bytes": len(data),
         }
 

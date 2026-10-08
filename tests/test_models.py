@@ -25,7 +25,6 @@ def test_parse_accounts():
     assert acct.alias == "Тест"
     assert acct.tenancy_full == ""
     assert acct.tenancy_short == "ЕЛС"
-    assert acct.balance is None
     assert acct.accruals_total is None
     assert acct.accruals_period is None
     assert acct.accruals_breakdown == {}
@@ -72,7 +71,6 @@ def test_parse_meters_electricity():
 
 def test_parse_finance():
     bp = parse_finance(load("payments_discretion"))
-    assert bp.balance == 10458.16
     assert bp.accruals_total == 7633.68
     assert bp.fines == 0.0
     assert bp.accruals_breakdown["Услуга 5"] == 697.62

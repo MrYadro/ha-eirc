@@ -11,12 +11,16 @@ from .const import (
     REQUEST_TIMEOUT_SECONDS,
     USER_AGENT,
 )
-from .exceptions import EircSpbAuthError, EircSpbConfirmationError
+from .exceptions import (
+    EircSpbAuthError,
+    EircSpbConfirmationError,
+    _code,
+    _message,
+)
 
 
 @dataclass
 class Session:
-    access: str
     auth: str
     verification_token: str | None = None
 
@@ -29,16 +33,8 @@ class AuthResult:
     channels: list[str] = field(default_factory=list)
 
 
-def _message(data) -> str:
-    if isinstance(data, dict) and data.get("message"):
-        return str(data["message"])
-    return "auth request failed"
-
-
-def _code(data) -> str | None:
-    if isinstance(data, dict) and data.get("code") is not None:
-        return str(data["code"])
-    return None
+def _auth_message(data) -> str:
+    return _message(data, "auth request failed")
 
 
 class Authenticator:
@@ -94,13 +90,12 @@ class Authenticator:
         if status == 200 and isinstance(data, dict):
             return AuthResult(
                 session=Session(
-                    access=str(data.get("access", "")),
                     auth=str(data.get("auth", "")),
                     verification_token=verification_token,
                 ),
                 needs_confirmation=False,
             )
-        raise EircSpbAuthError(_message(data), _code(data))
+        raise EircSpbAuthError(_auth_message(data), _code(data))
 
     async def send_code(self, transaction_id: str, channel: str) -> None:
         status, data = await self._request(
@@ -109,7 +104,7 @@ class Authenticator:
             {},
         )
         if status >= 400:
-            raise EircSpbAuthError(_message(data), _code(data))
+            raise EircSpbAuthError(_auth_message(data), _code(data))
 
     async def verify_code(self, transaction_id: str, channel: str, code: str) -> Session:
         path = (
@@ -119,10 +114,9 @@ class Authenticator:
         )
         status, data = await self._request("POST", path, {"code": code})
         if status >= 400:
-            raise EircSpbConfirmationError(_message(data), _code(data))
+            raise EircSpbConfirmationError(_auth_message(data), _code(data))
         assert isinstance(data, dict)
         return Session(
-            access=str(data.get("access", "")),
             auth=str(data.get("auth", "")),
             verification_token=data.get("verified"),
         )

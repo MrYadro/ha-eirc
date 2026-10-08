@@ -207,7 +207,7 @@ async def test_get_finance(aresponses, client):
         ok(load("payments_discretion")),
     )
     finance = await client.get_finance("910000001")
-    assert finance.balance == pytest.approx(10458.16)
+    assert finance.accruals_total == pytest.approx(7633.68)
 
 
 async def test_get_details(aresponses, client):
@@ -531,6 +531,31 @@ async def test_download_bill_returns_pdf_bytes(aresponses, client):
     aresponses.add(
         HOST,
         "/api/v1/file/file-uuid-1",
+        "GET",
+        web.Response(body=b"%PDF-1.4 fake", content_type="application/pdf"),
+    )
+    data = await client.download_bill("910000001", "26071000000001")
+    assert data == b"%PDF-1.4 fake"
+
+
+async def test_download_bill_401_relogs_in_and_retries(aresponses, client):
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a1", "auth": "t1"}))
+    aresponses.add(
+        HOST,
+        "/api/v7/accounts/910000001/payments/bills/26071000000001/uuid",
+        "GET",
+        ok({"code": "5", "message": "unauthorized"}, status=401),
+    )
+    aresponses.add(HOST, "/api/v8/users/auth", "POST", ok({"access": "a2", "auth": "t2"}))
+    aresponses.add(
+        HOST,
+        "/api/v7/accounts/910000001/payments/bills/26071000000001/uuid",
+        "GET",
+        web.json_response("file-uuid-2"),
+    )
+    aresponses.add(
+        HOST,
+        "/api/v1/file/file-uuid-2",
         "GET",
         web.Response(body=b"%PDF-1.4 fake", content_type="application/pdf"),
     )

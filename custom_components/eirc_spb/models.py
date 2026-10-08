@@ -35,7 +35,6 @@ class Account:
     alias: str = ""
     tenancy_full: str = ""
     tenancy_short: str = ""
-    balance: float | None = None
     accruals_total: float | None = None
     accruals_period: str | None = None
     accruals_breakdown: dict[str, float] = field(default_factory=dict)
@@ -55,7 +54,6 @@ class Account:
 
 @dataclass
 class BillsPayments:
-    balance: float | None
     accruals_total: float | None
     accruals_breakdown: dict[str, float]
     fines: float = 0.0
@@ -68,7 +66,6 @@ class MeterPassport:
     model: str | None = None
     install_date: str | None = None
     verification_date: str | None = None
-    check_interval: str | None = None
 
 
 @dataclass
@@ -136,7 +133,6 @@ def parse_meters(raw: list, account_id: str) -> list[Meter]:
 def parse_finance(raw: list) -> BillsPayments:
     checked = [i for i in raw if i.get("checked")]
     return BillsPayments(
-        balance=round(sum(i["charge"]["balance"]["value"] for i in checked), 2),
         accruals_total=round(sum(i["charge"]["accrued"] for i in checked), 2),
         accruals_breakdown={
             i["subservice"]["name"]: i["charge"]["accrued"] for i in checked
@@ -175,13 +171,11 @@ _PASSPORT_BY_CODE = {
     "METER_MODEL": "model",
     "METER_DATE": "install_date",
     "METER_CHECK_DATE": "verification_date",
-    "CHECK_INTERVAL": "check_interval",
 }
 _PASSPORT_BY_NAME = {
     "Модель": "model",
     "Дата установки": "install_date",
     "Дата истечения поверки": "verification_date",
-    "МПИ (лет)": "check_interval",
 }
 
 

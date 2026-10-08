@@ -16,6 +16,7 @@ from .notifications import NotificationDetector
 DETAILS_TTL_SECONDS = 24 * 3600
 HISTORY_TTL_SECONDS = 24 * 3600
 HISTORY_WINDOW_DAYS = 365
+HISTORY_DETAIL_LIMIT = 12
 
 
 @dataclass
@@ -88,7 +89,7 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
             if fresh:
                 fresh_set = set(fresh)
                 details = []
-                for bill_id in reversed(fresh):
+                for bill_id in reversed(fresh[:HISTORY_DETAIL_LIMIT]):
                     try:
                         bill = await self._client.get_bill(bill_id)
                     except EircSpbAuthError:
@@ -218,7 +219,6 @@ class EircSpbCoordinator(DataUpdateCoordinator[EircSpbData]):
                 except EircSpbApiError:
                     pass
                 finance = await self._client.get_finance(account.account_id)
-                account.balance = finance.balance
                 account.accruals_total = finance.accruals_total
                 account.accruals_breakdown = finance.accruals_breakdown
                 account.fines = finance.fines

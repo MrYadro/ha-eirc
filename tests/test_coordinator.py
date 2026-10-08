@@ -32,7 +32,6 @@ from custom_components.eirc_spb.models import (
 
 ADDRESS = "ул. Тестовая, д. 1, кв. 1"
 FINANCE = BillsPayments(
-    balance=100.0,
     accruals_total=1500.0,
     accruals_breakdown={"Услуга 5": 500.0, "Услуга 7": 1000.0},
     provider_accruals={'ООО "Тест 5"': 1500.0},
@@ -150,7 +149,6 @@ async def test_coordinator_merges_data(hass: HomeAssistant):
     coordinator = build_coordinator(hass, client, ["a1"])
     await coordinator.async_config_entry_first_refresh()
     data: EircSpbData = coordinator.data
-    assert data.accounts["a1"].balance == 100.0
     assert data.accounts["a1"].accruals_total == 1500.0
     assert data.accounts["a1"].accruals_breakdown == {"Услуга 5": 500.0, "Услуга 7": 1000.0}
     assert data.accounts["a1"].accruals_period == "14.02.2026 00:00:00"
@@ -216,7 +214,7 @@ async def test_coordinator_address_failure_is_non_fatal(hass: HomeAssistant):
     await coordinator.async_config_entry_first_refresh()
     assert coordinator.last_update_success is True
     assert coordinator.data.accounts["a1"].address == ""
-    assert coordinator.data.accounts["a1"].balance == 100.0
+    assert coordinator.data.accounts["a1"].accruals_total == 1500.0
 
 
 async def test_coordinator_auth_error_translated(hass: HomeAssistant):
@@ -350,7 +348,6 @@ async def test_coordinator_populates_new_fields(hass: HomeAssistant):
 
     client = make_client([Account(account_id="a1", number="1000000001", address="")])
     client.get_finance.return_value = BillsPayments(
-        balance=100.0,
         accruals_total=1500.0,
         accruals_breakdown={"Услуга 5": 500.0},
         fines=12.5,
@@ -555,6 +552,22 @@ async def test_coordinator_fetches_history_daily(hass: HomeAssistant):
     await coordinator.async_refresh()
     client.get_bills_history.assert_awaited_once()
     client.get_payments_history.assert_awaited_once()
+
+
+async def test_coordinator_caps_first_sync_bill_detail_fetches(hass: HomeAssistant):
+    client = make_client([make_account("a1", "1000000001")])
+    ids = [f"2607{i:08d}" for i in range(15, 0, -1)]
+    client.get_bills_history.return_value = ids
+    client.get_bill.side_effect = lambda bill_id: {
+        "id": bill_id,
+        "amount": 100.0,
+        "timestamp": "01.01.2026 00:00:00",
+    }
+    coordinator = build_coordinator(hass, client, ["a1"])
+    await coordinator.async_config_entry_first_refresh()
+    assert client.get_bill.await_count == 12
+    history = coordinator.data.accounts["a1"].bills_history
+    assert {h["id"] for h in history} == set(ids[:12])
 
 
 async def test_coordinator_history_survives_account_recreation(hass: HomeAssistant):

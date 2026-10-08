@@ -17,7 +17,7 @@ def strip_html(raw: str) -> str:
 class NotificationDetector:
     def __init__(self, deadline_days: int = 3, today: date | None = None) -> None:
         self._deadline_days = deadline_days
-        self._today = today or date.today()
+        self._today = today
         self._last_bills: dict[str, str | None] = {}
         self._last_payments: dict[str, str | None] = {}
         self._notified_deadlines: set[tuple[str, str]] = set()
@@ -25,6 +25,7 @@ class NotificationDetector:
 
     def feed(self, account: Account) -> list[dict]:
         out: list[dict] = []
+        today = self._today or date.today()
         last = self._last_bills.get(account.account_id, None)
         if (
             account.current_bill_id is not None
@@ -46,7 +47,7 @@ class NotificationDetector:
             account.reading_deadline_day is not None
             and account.reading_period_name
         ):
-            days_left = account.reading_deadline_day - self._today.day
+            days_left = account.reading_deadline_day - today.day
             key = (account.account_id, account.reading_period_name)
             if 0 <= days_left <= self._deadline_days and key not in self._notified_deadlines:
                 self._notified_deadlines.add(key)

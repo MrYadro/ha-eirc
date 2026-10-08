@@ -22,7 +22,7 @@ def client_mock() -> MagicMock:
     client = MagicMock()
     client.authenticate = AsyncMock(
         return_value=AuthResult(
-            session=Session(access="tok", auth="auth"),
+            session=Session(auth="auth"),
             needs_confirmation=False,
         )
     )
@@ -34,9 +34,7 @@ def client_mock() -> MagicMock:
     )
     client.send_code = AsyncMock()
     client.verify_code = AsyncMock(
-        return_value=Session(
-            access="tok", auth="auth", verification_token="vtok"
-        )
+        return_value=Session(auth="auth", verification_token="vtok")
     )
     client.verification_token = None
     return client
@@ -307,7 +305,7 @@ async def test_totp_flow_skips_send(hass: HomeAssistant):
     )
     client.send_code = AsyncMock()
     client.verify_code = AsyncMock(
-        return_value=Session(access="a", auth="b", verification_token="vtok")
+        return_value=Session(auth="b", verification_token="vtok")
     )
     client.verification_token = "vtok"
     with patch(

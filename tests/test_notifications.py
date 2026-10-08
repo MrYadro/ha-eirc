@@ -1,5 +1,6 @@
 from datetime import date
 
+from custom_components.eirc_spb import notifications as notes
 from custom_components.eirc_spb.notifications import NotificationDetector
 from custom_components.eirc_spb.models import Account
 
@@ -55,6 +56,24 @@ def test_deadline_notified_outside_window():
         make_account(reading_deadline_day=11, reading_period_name="Август 2026")
     )
     assert [n for n in out if n["type"] == "reading_deadline"] == []
+
+
+def test_deadline_uses_feed_date_not_construction_date(monkeypatch):
+    class FakeDate(date):
+        value = date(2026, 9, 1)
+
+        @classmethod
+        def today(cls):
+            return cls.value
+
+    monkeypatch.setattr(notes, "date", FakeDate)
+    det = NotificationDetector(deadline_days=3)
+    FakeDate.value = date(2026, 9, 9)
+    out = det.feed(
+        make_account(reading_deadline_day=11, reading_period_name="Сентябрь 2026")
+    )
+    assert [n["type"] for n in out] == ["reading_deadline"]
+    assert out[0]["days_left"] == 2
 
 
 def test_native_notifications_deduped_by_id():

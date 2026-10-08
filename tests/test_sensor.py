@@ -27,7 +27,6 @@ ENTRY_DATA = {
 }
 
 FINANCE = BillsPayments(
-    balance=150.25,
     accruals_total=2000.0,
     accruals_breakdown={"Услуга 5": 500.0, "Услуга 7": 1500.0},
 )
@@ -67,7 +66,6 @@ def build_data() -> EircSpbData:
         alias="Тест",
         tenancy_full="",
         tenancy_short="ЕЛС",
-        balance=150.25,
         accruals_total=2000.0,
         accruals_period="14.02.2026 00:00:00",
         accruals_breakdown={"Услуга 5": 500.0, "Услуга 7": 1500.0},
@@ -257,7 +255,6 @@ async def test_device_registered_per_account(hass: HomeAssistant):
 def make_client() -> AsyncMock:
     client = AsyncMock()
     account = build_data().accounts["a1"]
-    account.balance = None
     account.accruals_total = None
     account.accruals_breakdown = {}
     client.get_accounts.return_value = [account]
@@ -300,7 +297,6 @@ async def test_coordinator_refresh_updates_states(hass: HomeAssistant):
         ],
     )
     client.get_finance.return_value = BillsPayments(
-        balance=999.0,
         accruals_total=2000.0,
         accruals_breakdown={},
         )

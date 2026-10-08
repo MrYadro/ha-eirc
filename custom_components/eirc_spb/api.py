@@ -13,7 +13,7 @@ from .const import (
     USER_AGENT,
     VERSION,
 )
-from .exceptions import EircSpbApiError, EircSpbAuthError
+from .exceptions import EircSpbApiError, EircSpbAuthError, _code, _message
 from .models import (
     Account,
     AccountDetails,
@@ -24,17 +24,6 @@ from .models import (
     parse_finance,
     parse_meters,
 )
-
-def _message(data: Any) -> str:
-    if isinstance(data, dict) and data.get("message"):
-        return str(data["message"])
-    return "API request failed"
-
-
-def _code(data: Any) -> str | None:
-    if isinstance(data, dict) and data.get("code") is not None:
-        return str(data["code"])
-    return None
 
 
 class EircSpbApiClient:
@@ -261,10 +250,7 @@ class EircSpbApiClient:
                 raise EircSpbApiError(f"file download failed ({resp.status})")
             return data
 
-    async def _get_text(self, path: str) -> str | None:
-        async with self._lock:
-            if self._state is None:
-                await self._login()
+    async def _send_text(self, path: str) -> tuple[int, str]:
         assert self._state is not None
         timeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT_SECONDS)
         headers = {
@@ -276,9 +262,19 @@ class EircSpbApiClient:
         async with self._session.request(
             "GET", f"{BASE_URL}/{path}", headers=headers, timeout=timeout
         ) as resp:
-            if resp.status >= 400:
-                raise EircSpbApiError(f"request failed ({resp.status})")
-            return (await resp.text()).strip()
+            return resp.status, (await resp.text()).strip()
+
+    async def _get_text(self, path: str) -> str | None:
+        async with self._lock:
+            if self._state is None:
+                await self._login()
+            status, text = await self._send_text(path)
+            if status == 401:
+                await self._login()
+                status, text = await self._send_text(path)
+            if status >= 400:
+                raise EircSpbApiError(f"request failed ({status})")
+            return text
 
     async def download_bill(self, account_id: str, bill_id: str) -> bytes | None:
         data = await self._get_text(
